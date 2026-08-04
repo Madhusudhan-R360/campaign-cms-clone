@@ -1,15 +1,13 @@
 from fastapi import FastAPI
 
+from api.clients.app import router as client_router
+
 
 app = FastAPI(
     title="Campaign CMS Clone"
 )
 
-
-@app.get("/health")
-async def health():
-
-    return {
-        "success": True,
-        "message": "Campaign CMS Running"
-    }
+app.include_router(
+    client_router,
+    tags=["Clients"]
+)
