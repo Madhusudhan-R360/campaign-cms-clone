@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+motor
+pymongo
+pydantic
+pydantic-settings
+python-multipart
+pandas
+openpyxl
