@@ -18,6 +18,10 @@ from api.campaigns.app import (
     router as campaign_router
 )
 
+from api.claim_codes.app import (
+    router as claim_code_router
+)
+
 app = FastAPI(
     title="Campaign CMS Clone"
 )
@@ -45,4 +49,9 @@ app.include_router(
 app.include_router(
     campaign_router,
     tags=["Campaigns"]
+)
+
+app.include_router(
+    claim_code_router,
+    tags=["Claim Codes"]
 )

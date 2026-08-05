@@ -1,0 +1,4 @@
+claim_code,amount,email
+ABC123,100,test1@test.com
+XYZ456,200,test2@test.com
+PQR789,300,test3@test.com
