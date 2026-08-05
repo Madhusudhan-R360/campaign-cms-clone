@@ -14,7 +14,6 @@ Build a Campaign Management System that allows administrators to:
 - Manage Accounts
 - Manage Products
 - Manage Campaigns
-- Link Products to Campaigns
 - Upload Claim Codes
 - Generate Wallets
 - Create Orders
@@ -26,10 +25,6 @@ The platform acts as the administrative side of a rewards ecosystem.
 # High-Level Architecture
 
 ```text
-Campaign CMS
-      │
-      ▼
-
 Client
    ↓
 Account
@@ -49,34 +44,13 @@ Orders
 
 ---
 
-# Business Flow
-
-Example:
-
-```text
-MoneyMax
-   ↓
-Singapore Account
-   ↓
-Amazon Voucher
-   ↓
-Welcome Campaign
-   ↓
-Claim Codes
-   ↓
-Wallet Balance
-   ↓
-Redeem Rewards
-```
-
----
-
 # Technology Stack
 
 - FastAPI
 - MongoDB
-- Motor (Async Mongo Driver)
+- Motor
 - Pydantic
+- Pandas
 - Uvicorn
 
 ---
@@ -103,7 +77,12 @@ campaign-cms-clone/
 │   │   ├── schema.py
 │   │   └── utility.py
 │   │
-│   └── campaigns/
+│   ├── campaigns/
+│   │   ├── app.py
+│   │   ├── schema.py
+│   │   └── utility.py
+│   │
+│   └── claim_codes/
 │       ├── app.py
 │       ├── schema.py
 │       └── utility.py
@@ -116,16 +95,14 @@ campaign-cms-clone/
 │   └── csv/
 │
 ├── main.py
-├── .env
 ├── requirements.txt
+├── .env
 └── README.md
 ```
 
 ---
 
 # MongoDB Collections
-
-Currently configured collections:
 
 ```python
 clients
@@ -139,28 +116,9 @@ orders
 order_items
 ```
 
-Collections currently in active use:
-
-```text
-clients
-accounts
-products
-campaigns
-campaign_products_link
-```
-
-Remaining collections will be used in upcoming phases.
-
 ---
 
 # Installation
-
-## Clone Repository
-
-```bash
-git clone <repository-url>
-cd campaign-cms-clone
-```
 
 ## Create Virtual Environment
 
@@ -170,13 +128,13 @@ python3 -m venv venv
 
 ## Activate Virtual Environment
 
-Linux / Mac:
+Linux / Mac
 
 ```bash
 source venv/bin/activate
 ```
 
-Windows:
+Windows
 
 ```bash
 venv\Scripts\activate
@@ -190,9 +148,9 @@ pip install -r requirements.txt
 
 ---
 
-# Environment Configuration
+# Environment Variables
 
-Create a `.env` file:
+Create `.env`
 
 ```env
 MONGO_URL=mongodb://localhost:27017
@@ -201,15 +159,13 @@ DATABASE_NAME=campaign_cms
 
 ---
 
-# Run Application
+# Running Application
 
 ```bash
 uvicorn main:app --reload
 ```
 
----
-
-# Swagger Documentation
+Swagger:
 
 ```text
 http://localhost:8000/docs
@@ -217,21 +173,18 @@ http://localhost:8000/docs
 
 ---
 
-# Health Check
+# Current Business Hierarchy
 
-## Endpoint
-
-```http
-GET /health
-```
-
-## Response
-
-```json
-{
-  "success": true,
-  "message": "Campaign CMS Running"
-}
+```text
+MoneyMax
+   ↓
+Singapore Account
+   ↓
+Amazon Voucher
+   ↓
+MoneyMax Welcome Campaign
+   ↓
+ABC123 Claim Code
 ```
 
 ---
@@ -243,18 +196,31 @@ Completed:
 - FastAPI Setup
 - MongoDB Connection
 - Environment Configuration
-- Collection Definitions
 - Health Endpoint
+- Collection Definitions
+
+---
+
+## Health API
+
+```http
+GET /health
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "Campaign CMS Running"
+}
+```
 
 ---
 
 # Phase 2 - Client Module
 
-## Client Structure
-
-```text
-Client
-```
+Client represents the top-level organization.
 
 Examples:
 
@@ -295,7 +261,7 @@ PUT /clients/{client_id}
 
 ---
 
-## Sample Request
+## Sample Payload
 
 ```json
 {
@@ -310,7 +276,7 @@ PUT /clients/{client_id}
 
 # Phase 3 - Account Module
 
-## Relationship
+Relationship:
 
 ```text
 Client
@@ -362,7 +328,7 @@ PUT /accounts/{account_id}
 
 ---
 
-## Sample Request
+## Sample Payload
 
 ```json
 {
@@ -377,7 +343,7 @@ PUT /accounts/{account_id}
 
 # Phase 4 - Product Module
 
-## Relationship
+Relationship:
 
 ```text
 Client
@@ -394,7 +360,7 @@ MoneyMax
    ↓
 Singapore
    ↓
-Amazon Voucher $10
+Amazon Voucher
 ```
 
 ---
@@ -410,7 +376,7 @@ Amazon Voucher $10
   "category": "Gift Card",
   "price": 10,
   "stock_count": 1000,
-  "image_url": "https://sample.com/image.png",
+  "image_url": "https://example.com/image.png",
   "active_status": true
 }
 ```
@@ -453,69 +419,16 @@ PUT /products/{product_id}
 
 # Phase 5 - Campaign Module
 
-This is the core of the CMS.
+The campaign module is the heart of the CMS.
 
----
-
-## Relationship
+Relationship:
 
 ```text
-Client
-   ↓
-Account
-   ↓
-Product
-
 Campaign
-   ↓
-Campaign Product Mapping
-   ↓
+        ↓
+Campaign Product Link
+        ↓
 Product
-```
-
----
-
-## Why Campaign Product Mapping?
-
-Instead of storing products directly inside campaigns:
-
-```text
-Campaign A
-    ↓
-Amazon
-
-Campaign B
-    ↓
-Amazon
-```
-
-a mapping collection allows a product to belong to multiple campaigns.
-
----
-
-## Campaign Structure
-
-```json
-{
-  "name": "MoneyMax Welcome Campaign",
-  "account_id": "...",
-  "start_date": "2026-01-01T00:00:00",
-  "end_date": "2026-12-31T23:59:59",
-  "active_status": true
-}
-```
-
----
-
-## Campaign Product Mapping Structure
-
-```json
-{
-  "campaign_id": "...",
-  "product_id": "...",
-  "min_qty": 1,
-  "max_qty": 5
-}
 ```
 
 ---
@@ -550,13 +463,13 @@ PUT /campaigns/{campaign_id}
 
 ## Campaign Product Mapping APIs
 
-### Attach Product To Campaign
+### Link Product To Campaign
 
 ```http
 POST /campaigns/{campaign_id}/products
 ```
 
-Request:
+Payload:
 
 ```json
 {
@@ -590,26 +503,184 @@ Response:
 
 ---
 
-# Current Data Hierarchy
+# Phase 6 - Claim Codes Module
+
+This phase introduces reward entitlements.
+
+Relationship:
 
 ```text
-MoneyMax (Client)
-       │
-       ▼
+Campaign
+    ↓
+Claim Codes
+```
 
-Singapore (Account)
-       │
-       ▼
+Example:
 
-Amazon Voucher (Product)
-       │
-       ▼
-
+```text
 MoneyMax Welcome Campaign
-       │
-       ▼
+      ↓
+ABC123 ($100)
 
-Campaign Product Link
+XYZ456 ($200)
+
+PQR789 ($300)
+```
+
+---
+
+# CSV Upload Format
+
+Create a CSV file:
+
+```csv
+claim_code,amount,email
+ABC123,100,test1@test.com
+XYZ456,200,test2@test.com
+PQR789,300,test3@test.com
+```
+
+---
+
+# Claim Code Document
+
+```json
+{
+  "_id": "...",
+  "campaign_id": "...",
+  "claim_code": "ABC123",
+  "amount": 100,
+  "email": "test1@test.com",
+  "active_status": true,
+  "created_at": "..."
+}
+```
+
+---
+
+# Claim Code APIs
+
+### Upload Claim Codes
+
+```http
+POST /claim-codes/upload/{campaign_id}
+```
+
+Upload:
+
+```text
+sample_claim_codes.csv
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "3 claim codes uploaded"
+}
+```
+
+---
+
+### Get All Claim Codes
+
+```http
+GET /claim-codes
+```
+
+---
+
+### Get Claim Code By ID
+
+```http
+GET /claim-codes/{claim_code_id}
+```
+
+---
+
+### Get Claim Codes By Campaign
+
+```http
+GET /claim-codes/campaign/{campaign_id}
+```
+
+---
+
+# Claim Code Validations
+
+Implemented:
+
+### Campaign Validation
+
+```text
+Campaign must exist
+```
+
+---
+
+### CSV Header Validation
+
+Required headers:
+
+```text
+claim_code
+amount
+email
+```
+
+---
+
+### Duplicate Claim Codes In File
+
+Reject:
+
+```text
+ABC123
+ABC123
+```
+
+---
+
+### Existing Claim Code Validation
+
+Prevents uploading a claim code already present in MongoDB.
+
+---
+
+### Amount Validation
+
+Reject:
+
+```text
+0
+-100
+```
+
+Accept:
+
+```text
+100
+200
+300
+```
+
+---
+
+# Current System Flow
+
+```text
+Client
+   ↓
+Account
+   ↓
+Product
+   ↓
+Campaign
+   ↓
+Campaign Product Mapping
+   ↓
+Claim Codes
 ```
 
 ---
@@ -626,49 +697,51 @@ Campaign Product Link
 ✅ Phase 4 - Product Module
 
 ✅ Phase 5 - Campaign Module
+
+✅ Phase 6 - Claim Codes Module
 ```
 
 ---
 
 # Upcoming Phases
 
-## Phase 6
-
-Claim Code Module
+## Phase 7 - Wallet Module
 
 ```text
-CSV Upload
-Claim Code Creation
+Claim Code
+    ↓
+Wallet
 ```
+
+Features:
+
+- Wallet Creation
+- Balance Storage
+- Wallet Lookup
+- Wallet Validation
 
 ---
 
-## Phase 7
-
-Wallet Module
+## Phase 8 - Order Module
 
 ```text
-Wallet Creation
-Balance Management
+Wallet
+   ↓
+Orders
 ```
 
----
+Features:
 
-## Phase 8
-
-Order Module
-
-```text
-Automatic Order Creation
-Order Listing
-Order Tracking
-```
+- Order Creation
+- Product Redemption
+- Balance Deduction
+- Order History
 
 ---
 
 # End Goal
 
-Recreate an intermediate-level version of the Reward Campaign CMS that can:
+Build an intermediate-level Campaign CMS that can:
 
 ```text
 Manage Clients
@@ -676,8 +749,8 @@ Manage Accounts
 Manage Products
 Manage Campaigns
 Upload Claim Codes
-Create Wallets
-Generate Orders
+Generate Wallets
+Create Reward Orders
 ```
 
-while following real-world backend architecture and best practices using FastAPI and MongoDB.
+while following clean backend architecture using FastAPI and MongoDB.
