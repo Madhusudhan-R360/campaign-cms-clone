@@ -14,6 +14,10 @@ from api.products.app import (
     router as product_router
 )
 
+from api.campaigns.app import (
+    router as campaign_router
+)
+
 app = FastAPI(
     title="Campaign CMS Clone"
 )
@@ -36,4 +40,9 @@ app.include_router(
 app.include_router(
     account_router,
     tags=["Accounts"]
+)
+
+app.include_router(
+    campaign_router,
+    tags=["Campaigns"]
 )
