@@ -52,7 +52,7 @@ async def create_order(data):
         "product_name": product["name"],
         "quantity": data["quantity"],
         "amount": total_amount,
-        "status": "completed",
+        "status": "pending",
         "created_at": datetime.utcnow()
     }
 
@@ -133,6 +133,95 @@ async def get_orders_by_claim_code(
         .find(
             {
                 "claim_code": claim_code
+            }
+        )
+        .to_list(None)
+    )
+
+    for order in orders:
+        order["_id"] = str(order["_id"])
+        order["product_id"] = str(
+            order["product_id"]
+        )
+
+    return {
+        "success": True,
+        "data": orders
+    }
+
+
+async def update_order_status(
+    order_id,
+    status
+):
+
+    order = await orders_collection.find_one(
+        {
+            "_id": ObjectId(order_id)
+        }
+    )
+
+    if not order:
+        return {
+            "success": False,
+            "message": "Order not found"
+        }
+
+    allowed_transitions = {
+        "pending": [
+            "processing",
+            "cancelled",
+            "failed"
+        ],
+        "processing": [
+            "completed",
+            "failed"
+        ],
+        "completed": [],
+        "cancelled": [],
+        "failed": []
+    }
+
+    current_status = order["status"]
+
+    if status not in allowed_transitions[
+        current_status
+    ]:
+        return {
+            "success": False,
+            "message": (
+                f"Cannot move from "
+                f"{current_status} to {status}"
+            )
+        }
+
+    await orders_collection.update_one(
+        {
+            "_id": ObjectId(order_id)
+        },
+        {
+            "$set": {
+                "status": status,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+
+    return {
+        "success": True,
+        "message": f"Order moved to {status}"
+    }
+
+
+async def get_orders_by_status(
+    status
+):
+
+    orders = await (
+        orders_collection
+        .find(
+            {
+                "status": status
             }
         )
         .to_list(None)
