@@ -1,14 +1,14 @@
 # Campaign CMS Clone
 
-An intermediate-level Campaign CMS built using FastAPI and MongoDB.
+An intermediate-level Campaign CMS built using **FastAPI** and **MongoDB**.
 
-This project is inspired by the Reward360 Campaign CMS and is being rebuilt from scratch to understand the architecture, workflows, data relationships, and backend design behind a reward campaign management platform.
+This project is inspired by the Reward360 Campaign CMS and has been rebuilt from scratch to understand the complete reward campaign lifecycle, including campaign administration, claim code management, wallet generation, and reward redemption.
 
 ---
 
-# Project Goal
+# Project Objective
 
-Build a Campaign Management System that allows administrators to:
+Build a Campaign CMS that can:
 
 - Manage Clients
 - Manage Accounts
@@ -17,12 +17,14 @@ Build a Campaign Management System that allows administrators to:
 - Map Products to Campaigns
 - Upload Claim Codes
 - Generate Wallets
-- Manage Reward Lifecycle
-- Prepare for Product Redemption and Orders
+- Process Reward Redemptions
+- Track Orders
+
+The project mirrors the workflow of a real-world rewards platform.
 
 ---
 
-# High-Level Architecture
+# End-to-End Architecture
 
 ```text
 Client
@@ -87,7 +89,12 @@ campaign-cms-clone/
 │   │   ├── schema.py
 │   │   └── utility.py
 │   │
-│   └── wallets/
+│   ├── wallets/
+│   │   ├── app.py
+│   │   ├── schema.py
+│   │   └── utility.py
+│   │
+│   └── orders/
 │       ├── app.py
 │       ├── schema.py
 │       └── utility.py
@@ -131,7 +138,7 @@ order_items
 python3 -m venv venv
 ```
 
-## Activate Virtual Environment
+## Activate Environment
 
 Linux / Mac
 
@@ -145,6 +152,8 @@ Windows
 venv\Scripts\activate
 ```
 
+---
+
 ## Install Dependencies
 
 ```bash
@@ -155,7 +164,7 @@ pip install -r requirements.txt
 
 # Environment Variables
 
-Create a `.env` file.
+Create `.env`:
 
 ```env
 MONGO_URL=mongodb://localhost:27017
@@ -170,7 +179,7 @@ DATABASE_NAME=campaign_cms
 uvicorn main:app --reload
 ```
 
-Swagger:
+Swagger UI:
 
 ```text
 http://localhost:8000/docs
@@ -178,38 +187,24 @@ http://localhost:8000/docs
 
 ---
 
-# Current Business Flow
+# Business Hierarchy
 
 ```text
-Client
-   ↓
-Account
-   ↓
-Product
-   ↓
-Campaign
-   ↓
-Campaign Product Mapping
-   ↓
-Claim Code
-   ↓
-Wallet
-```
-
-Example:
-
-```text
-MoneyMax
-   ↓
-Singapore Account
-   ↓
-Amazon Voucher
-   ↓
-Welcome Campaign
-   ↓
-ABC123
-   ↓
-Wallet Balance = $100
+Samsung India
+      ↓
+Samsung eStore
+      ↓
+Amazon Gift Card ₹500
+Flipkart Gift Card ₹1000
+Myntra Voucher ₹750
+      ↓
+Samsung Welcome Rewards 2026
+      ↓
+Claim Codes
+      ↓
+Wallets
+      ↓
+Orders
 ```
 
 ---
@@ -222,11 +217,9 @@ Completed:
 - MongoDB Connection
 - Environment Configuration
 - Collection Definitions
-- Health Check Endpoint
+- Health Endpoint
 
----
-
-## Health API
+## Health Check
 
 ```http
 GET /health
@@ -245,54 +238,36 @@ Response:
 
 # Phase 2 - Client Module
 
-Client represents the top-level organization.
+Represents the top-level organization.
 
 Examples:
 
 ```text
-MoneyMax
+Samsung India
 HSBC
 Citibank
-SingSaver
+MoneyMax
 ```
-
----
 
 ## APIs
 
-### Create Client
-
 ```http
 POST /clients
-```
 
-### Get All Clients
-
-```http
 GET /clients
-```
 
-### Get Client By ID
-
-```http
 GET /clients/{client_id}
-```
 
-### Update Client
-
-```http
 PUT /clients/{client_id}
 ```
 
----
-
-## Sample Payload
+### Sample Request
 
 ```json
 {
-  "client_name": "MoneyMax",
-  "time_zone": "Asia/Singapore",
-  "primary_contact": "admin@moneymax.com",
+  "client_name": "Samsung India",
+  "time_zone": "Asia/Kolkata",
+  "primary_contact": "rewards@samsung.com",
   "active_status": true
 }
 ```
@@ -312,42 +287,22 @@ Account
 Example:
 
 ```text
-MoneyMax
-   ↓
-Singapore
+Samsung India
+      ↓
+Samsung eStore
 ```
-
----
 
 ## APIs
 
-### Create Account
-
 ```http
 POST /accounts
-```
 
-### Get All Accounts
-
-```http
 GET /accounts
-```
 
-### Get Account By ID
-
-```http
 GET /accounts/{account_id}
-```
 
-### Get Accounts By Client
-
-```http
 GET /accounts/client/{client_id}
-```
 
-### Update Account
-
-```http
 PUT /accounts/{account_id}
 ```
 
@@ -358,63 +313,49 @@ PUT /accounts/{account_id}
 Relationship:
 
 ```text
-Client
-   ↓
 Account
    ↓
-Product
+Products
 ```
 
----
+Examples:
 
-## Product Structure
+```text
+Amazon Gift Card ₹500
+
+Flipkart Gift Card ₹1000
+
+Myntra Voucher ₹750
+```
+
+## APIs
+
+```http
+POST /products
+
+GET /products
+
+GET /products/{product_id}
+
+GET /products/account/{account_id}
+
+PUT /products/{product_id}
+```
+
+### Product Example
 
 ```json
 {
   "account_id": "...",
-  "sku": "AMZ10",
-  "name": "Amazon Voucher $10",
+  "sku": "AMZ500",
+  "name": "Amazon Gift Card ₹500",
   "brand": "Amazon",
   "category": "Gift Card",
-  "price": 10,
+  "price": 500,
   "stock_count": 1000,
-  "image_url": "https://example.com/image.png",
+  "image_url": "https://amazon.com/logo.png",
   "active_status": true
 }
-```
-
----
-
-## APIs
-
-### Create Product
-
-```http
-POST /products
-```
-
-### Get All Products
-
-```http
-GET /products
-```
-
-### Get Product By ID
-
-```http
-GET /products/{product_id}
-```
-
-### Get Products By Account
-
-```http
-GET /products/account/{account_id}
-```
-
-### Update Product
-
-```http
-PUT /products/{product_id}
 ```
 
 ---
@@ -423,81 +364,41 @@ PUT /products/{product_id}
 
 Campaigns represent reward programs.
 
-Example:
+Examples:
 
 ```text
-MoneyMax Welcome Campaign
-MoneyMax Referral Campaign
-HSBC Rewards Campaign
-```
+Samsung Welcome Rewards 2026
 
----
+Samsung Referral Rewards
 
-# Campaign Product Mapping
-
-Products are linked to campaigns through a mapping collection.
-
-Relationship:
-
-```text
-Campaign
-      ↓
-Campaign Product Link
-      ↓
-Product
-```
-
-This allows:
-
-```text
-Amazon Voucher
-      ↓
-Campaign A
-
-Amazon Voucher
-      ↓
-Campaign B
+Samsung Festive Campaign
 ```
 
 ---
 
 ## Campaign APIs
 
-### Create Campaign
-
 ```http
 POST /campaigns
-```
 
-### Get All Campaigns
-
-```http
 GET /campaigns
-```
 
-### Get Campaign By ID
-
-```http
 GET /campaigns/{campaign_id}
-```
 
-### Update Campaign
-
-```http
 PUT /campaigns/{campaign_id}
 ```
 
 ---
 
-## Campaign Product APIs
+## Campaign Product Mapping APIs
 
-### Link Product To Campaign
+### Link Product
 
 ```http
 POST /campaigns/{campaign_id}/products
 ```
 
-Payload:
+Request:
 
 ```json
 {
@@ -517,71 +418,44 @@ GET /campaigns/{campaign_id}/products
 
 ---
 
-# Phase 6 - Claim Codes Module
+# Phase 6 - Claim Code Module
 
 Claim Codes represent reward entitlements.
 
 Example:
 
 ```text
-ABC123 = $100
+SAM1001 = ₹5000
 
-XYZ456 = $200
+SAM1002 = ₹3000
 
-PQR789 = $300
+SAM1003 = ₹10000
 ```
 
 ---
 
-# CSV Upload Format
+## CSV Upload Format
 
 ```csv
 claim_code,amount,email
-ABC123,100,test1@test.com
-XYZ456,200,test2@test.com
-PQR789,300,test3@test.com
+SAM1001,5000,arjun@gmail.com
+SAM1002,3000,priya@gmail.com
+SAM1003,10000,vikram@gmail.com
+SAM1004,7500,neha@gmail.com
+SAM1005,2000,rahul@gmail.com
 ```
 
 ---
 
-## Claim Code Document
-
-```json
-{
-  "_id": "...",
-  "campaign_id": "...",
-  "claim_code": "ABC123",
-  "amount": 100,
-  "email": "test1@test.com",
-  "active_status": true
-}
-```
-
----
-
-## APIs
-
-### Upload Claim Codes
+## Claim Code APIs
 
 ```http
 POST /claim-codes/upload/{campaign_id}
-```
 
-### Get All Claim Codes
-
-```http
 GET /claim-codes
-```
 
-### Get Claim Code By ID
-
-```http
 GET /claim-codes/{claim_code_id}
-```
 
-### Get Claim Codes By Campaign
-
-```http
 GET /claim-codes/campaign/{campaign_id}
 ```
 
@@ -601,14 +475,29 @@ Implemented:
 
 # Phase 7 - Wallet Module
 
-Wallets provide balance management for claim codes.
+Wallets hold redeemable balances.
 
 Relationship:
 
 ```text
 Claim Code
-      ↓
+     ↓
 Wallet
+```
+
+Example:
+
+```text
+Claim Code:
+SAM1001
+
+Amount:
+₹5000
+
+↓
+
+Wallet:
+₹5000
 ```
 
 ---
@@ -617,46 +506,11 @@ Wallet
 
 ```json
 {
-  "_id": "...",
-  "campaign_id": "...",
-  "claim_code": "ABC123",
-  "total_balance": 100,
-  "available_balance": 100,
-  "consumed_balance": 0,
-  "active_status": true
+  "claim_code": "SAM1001",
+  "total_balance": 5000,
+  "available_balance": 5000,
+  "consumed_balance": 0
 }
-```
-
----
-
-## Wallet Generation Flow
-
-```text
-Campaign
-     ↓
-Claim Codes
-     ↓
-Generate Wallets
-     ↓
-Wallet Balance Created
-```
-
-Example:
-
-```text
-Claim Code:
-ABC123
-
-Amount:
-100
-
-↓
-
-Wallet
-
-Total Balance      : 100
-Available Balance  : 100
-Consumed Balance   : 0
 ```
 
 ---
@@ -668,8 +522,6 @@ Consumed Balance   : 0
 ```http
 POST /wallets/generate/{campaign_id}
 ```
-
-Creates wallets from all claim codes belonging to the campaign.
 
 ---
 
@@ -695,45 +547,242 @@ GET /wallets/{wallet_id}
 GET /wallets/claim-code/{claim_code}
 ```
 
-Example:
+---
 
-```http
-GET /wallets/claim-code/ABC123
+## Features
+
+- Campaign Validation
+- Claim Code Validation
+- Duplicate Wallet Prevention
+- Automatic Balance Initialization
+
+---
+
+# Phase 8 - Order Module
+
+This is where redemption occurs.
+
+Relationship:
+
+```text
+Wallet
+    ↓
+Order
 ```
 
 ---
 
-## Wallet Features
+# Redemption Flow
+
+```text
+Wallet Balance
+      ↓
+Product Selected
+      ↓
+Balance Validation
+      ↓
+Order Creation
+      ↓
+Wallet Deduction
+```
+
+---
+
+## Example
+
+Initial Wallet:
+
+```text
+Claim Code:
+SAM1001
+
+Available Balance:
+₹5000
+```
+
+Redeem:
+
+```text
+Amazon Gift Card ₹500
+
+Quantity = 2
+```
+
+Cost:
+
+```text
+₹1000
+```
+
+Updated Wallet:
+
+```text
+Available Balance = ₹4000
+
+Consumed Balance = ₹1000
+```
+
+---
+
+## Order Structure
+
+```json
+{
+  "claim_code": "SAM1001",
+  "product_name": "Amazon Gift Card ₹500",
+  "quantity": 2,
+  "amount": 1000,
+  "status": "completed"
+}
+```
+
+---
+
+## Order APIs
+
+### Create Order
+
+```http
+POST /orders
+```
+
+Request:
+
+```json
+{
+  "claim_code": "SAM1001",
+  "product_id": "<product_id>",
+  "quantity": 2
+}
+```
+
+---
+
+### Get All Orders
+
+```http
+GET /orders
+```
+
+---
+
+### Get Order By ID
+
+```http
+GET /orders/{order_id}
+```
+
+---
+
+### Get Orders By Claim Code
+
+```http
+GET /orders/claim-code/{claim_code}
+```
+
+---
+
+## Features
 
 Implemented:
 
-### Campaign Validation
-
-Ensure campaign exists.
-
-### Claim Code Validation
-
-Wallets are only generated from existing claim codes.
-
-### Duplicate Wallet Prevention
-
-A claim code can only have one wallet.
-
-### Automatic Balance Initialization
+### Wallet Validation
 
 ```text
-Claim Code Amount
-      ↓
-Wallet Total Balance
+Wallet must exist
+```
 
-Claim Code Amount
-      ↓
-Wallet Available Balance
+### Product Validation
+
+```text
+Product must exist
+```
+
+### Balance Validation
+
+```text
+Wallet Balance >= Order Value
+```
+
+### Automatic Wallet Deduction
+
+```text
+Available Balance ↓
+
+Consumed Balance ↑
 ```
 
 ---
 
-# Current Project Status
+# End-to-End Test Scenario
+
+## Client
+
+```text
+Samsung India
+```
+
+## Account
+
+```text
+Samsung eStore
+```
+
+## Products
+
+```text
+Amazon Gift Card ₹500
+
+Flipkart Gift Card ₹1000
+
+Myntra Voucher ₹750
+```
+
+## Campaign
+
+```text
+Samsung Welcome Rewards 2026
+```
+
+## Claim Codes
+
+```text
+SAM1001 = ₹5000
+
+SAM1002 = ₹3000
+
+SAM1003 = ₹10000
+```
+
+## Wallets
+
+```text
+SAM1001 → ₹5000
+
+SAM1002 → ₹3000
+
+SAM1003 → ₹10000
+```
+
+## Orders
+
+```text
+SAM1001
+
+Amazon ₹500 × 2
+
+Total = ₹1000
+```
+
+Wallet Balance:
+
+```text
+₹5000 → ₹4000
+```
+
+---
+
+# Completed Phases
 
 ```text
 ✅ Phase 1 - Foundation
@@ -749,45 +798,22 @@ Wallet Available Balance
 ✅ Phase 6 - Claim Codes Module
 
 ✅ Phase 7 - Wallet Module
+
+✅ Phase 8 - Order Module
 ```
 
 ---
 
-# Upcoming Phases
+# Final Outcome
 
-## Phase 8 - Order Module
-
-Relationship:
+The system now supports the complete reward lifecycle:
 
 ```text
-Wallet
-    ↓
-Order
-```
-
-Features:
-
-- Redeem Product
-- Balance Validation
-- Balance Deduction
-- Order Creation
-- Order History
-
----
-
-# Final Goal
-
-Build a fully functional Campaign CMS capable of:
-
-```text
-Managing Clients
-Managing Accounts
-Managing Products
-Managing Campaigns
-Uploading Claim Codes
-Generating Wallets
-Creating Orders
-Managing Reward Redemptions
-```
-
-using FastAPI, MongoDB, and real-world backend architecture patterns.
+Client Creation
+       ↓
+Account Creation
+       ↓
+Product Creation
+       ↓
+Campaign Creation
+       
