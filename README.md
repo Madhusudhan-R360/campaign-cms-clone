@@ -2,7 +2,7 @@
 
 An intermediate-level Campaign CMS built using FastAPI and MongoDB.
 
-This project is inspired by the Reward360 Campaign CMS and is being rebuilt from scratch to understand the architecture, business workflows, and system design behind a reward campaign management platform.
+This project is inspired by the Reward360 Campaign CMS and is being rebuilt from scratch to understand the architecture, workflows, data relationships, and backend design behind a reward campaign management platform.
 
 ---
 
@@ -14,11 +14,11 @@ Build a Campaign Management System that allows administrators to:
 - Manage Accounts
 - Manage Products
 - Manage Campaigns
+- Map Products to Campaigns
 - Upload Claim Codes
 - Generate Wallets
-- Create Orders
-
-The platform acts as the administrative side of a rewards ecosystem.
+- Manage Reward Lifecycle
+- Prepare for Product Redemption and Orders
 
 ---
 
@@ -82,7 +82,12 @@ campaign-cms-clone/
 │   │   ├── schema.py
 │   │   └── utility.py
 │   │
-│   └── claim_codes/
+│   ├── claim_codes/
+│   │   ├── app.py
+│   │   ├── schema.py
+│   │   └── utility.py
+│   │
+│   └── wallets/
 │       ├── app.py
 │       ├── schema.py
 │       └── utility.py
@@ -95,8 +100,8 @@ campaign-cms-clone/
 │   └── csv/
 │
 ├── main.py
-├── requirements.txt
 ├── .env
+├── requirements.txt
 └── README.md
 ```
 
@@ -150,7 +155,7 @@ pip install -r requirements.txt
 
 # Environment Variables
 
-Create `.env`
+Create a `.env` file.
 
 ```env
 MONGO_URL=mongodb://localhost:27017
@@ -159,7 +164,7 @@ DATABASE_NAME=campaign_cms
 
 ---
 
-# Running Application
+# Run Application
 
 ```bash
 uvicorn main:app --reload
@@ -173,7 +178,25 @@ http://localhost:8000/docs
 
 ---
 
-# Current Business Hierarchy
+# Current Business Flow
+
+```text
+Client
+   ↓
+Account
+   ↓
+Product
+   ↓
+Campaign
+   ↓
+Campaign Product Mapping
+   ↓
+Claim Code
+   ↓
+Wallet
+```
+
+Example:
 
 ```text
 MoneyMax
@@ -182,9 +205,11 @@ Singapore Account
    ↓
 Amazon Voucher
    ↓
-MoneyMax Welcome Campaign
+Welcome Campaign
    ↓
-ABC123 Claim Code
+ABC123
+   ↓
+Wallet Balance = $100
 ```
 
 ---
@@ -196,8 +221,8 @@ Completed:
 - FastAPI Setup
 - MongoDB Connection
 - Environment Configuration
-- Health Endpoint
 - Collection Definitions
+- Health Check Endpoint
 
 ---
 
@@ -328,19 +353,6 @@ PUT /accounts/{account_id}
 
 ---
 
-## Sample Payload
-
-```json
-{
-  "account_name": "Singapore",
-  "description": "Singapore Rewards Program",
-  "client_id": "<client_id>",
-  "active_status": true
-}
-```
-
----
-
 # Phase 4 - Product Module
 
 Relationship:
@@ -351,16 +363,6 @@ Client
 Account
    ↓
 Product
-```
-
-Example:
-
-```text
-MoneyMax
-   ↓
-Singapore
-   ↓
-Amazon Voucher
 ```
 
 ---
@@ -419,16 +421,42 @@ PUT /products/{product_id}
 
 # Phase 5 - Campaign Module
 
-The campaign module is the heart of the CMS.
+Campaigns represent reward programs.
+
+Example:
+
+```text
+MoneyMax Welcome Campaign
+MoneyMax Referral Campaign
+HSBC Rewards Campaign
+```
+
+---
+
+# Campaign Product Mapping
+
+Products are linked to campaigns through a mapping collection.
 
 Relationship:
 
 ```text
 Campaign
-        ↓
+      ↓
 Campaign Product Link
-        ↓
+      ↓
 Product
+```
+
+This allows:
+
+```text
+Amazon Voucher
+      ↓
+Campaign A
+
+Amazon Voucher
+      ↓
+Campaign B
 ```
 
 ---
@@ -441,7 +469,7 @@ Product
 POST /campaigns
 ```
 
-### Get Campaigns
+### Get All Campaigns
 
 ```http
 GET /campaigns
@@ -461,7 +489,7 @@ PUT /campaigns/{campaign_id}
 
 ---
 
-## Campaign Product Mapping APIs
+## Campaign Product APIs
 
 ### Link Product To Campaign
 
@@ -487,51 +515,25 @@ Payload:
 GET /campaigns/{campaign_id}/products
 ```
 
-Response:
-
-```json
-[
-  {
-    "sku": "AMZ10",
-    "name": "Amazon Voucher $10",
-    "price": 10,
-    "min_qty": 1,
-    "max_qty": 5
-  }
-]
-```
-
 ---
 
 # Phase 6 - Claim Codes Module
 
-This phase introduces reward entitlements.
-
-Relationship:
-
-```text
-Campaign
-    ↓
-Claim Codes
-```
+Claim Codes represent reward entitlements.
 
 Example:
 
 ```text
-MoneyMax Welcome Campaign
-      ↓
-ABC123 ($100)
+ABC123 = $100
 
-XYZ456 ($200)
+XYZ456 = $200
 
-PQR789 ($300)
+PQR789 = $300
 ```
 
 ---
 
 # CSV Upload Format
-
-Create a CSV file:
 
 ```csv
 claim_code,amount,email
@@ -542,7 +544,7 @@ PQR789,300,test3@test.com
 
 ---
 
-# Claim Code Document
+## Claim Code Document
 
 ```json
 {
@@ -551,14 +553,13 @@ PQR789,300,test3@test.com
   "claim_code": "ABC123",
   "amount": 100,
   "email": "test1@test.com",
-  "active_status": true,
-  "created_at": "..."
+  "active_status": true
 }
 ```
 
 ---
 
-# Claim Code APIs
+## APIs
 
 ### Upload Claim Codes
 
@@ -566,38 +567,17 @@ PQR789,300,test3@test.com
 POST /claim-codes/upload/{campaign_id}
 ```
 
-Upload:
-
-```text
-sample_claim_codes.csv
-```
-
-Response:
-
-```json
-{
-  "success": true,
-  "message": "3 claim codes uploaded"
-}
-```
-
----
-
 ### Get All Claim Codes
 
 ```http
 GET /claim-codes
 ```
 
----
-
 ### Get Claim Code By ID
 
 ```http
 GET /claim-codes/{claim_code_id}
 ```
-
----
 
 ### Get Claim Codes By Campaign
 
@@ -607,85 +587,153 @@ GET /claim-codes/campaign/{campaign_id}
 
 ---
 
-# Claim Code Validations
+## Validations
+
+Implemented:
+
+- Campaign Validation
+- CSV Header Validation
+- Duplicate Claim Codes Validation
+- Existing Claim Code Validation
+- Amount Validation
+
+---
+
+# Phase 7 - Wallet Module
+
+Wallets provide balance management for claim codes.
+
+Relationship:
+
+```text
+Claim Code
+      ↓
+Wallet
+```
+
+---
+
+## Wallet Structure
+
+```json
+{
+  "_id": "...",
+  "campaign_id": "...",
+  "claim_code": "ABC123",
+  "total_balance": 100,
+  "available_balance": 100,
+  "consumed_balance": 0,
+  "active_status": true
+}
+```
+
+---
+
+## Wallet Generation Flow
+
+```text
+Campaign
+     ↓
+Claim Codes
+     ↓
+Generate Wallets
+     ↓
+Wallet Balance Created
+```
+
+Example:
+
+```text
+Claim Code:
+ABC123
+
+Amount:
+100
+
+↓
+
+Wallet
+
+Total Balance      : 100
+Available Balance  : 100
+Consumed Balance   : 0
+```
+
+---
+
+## Wallet APIs
+
+### Generate Wallets
+
+```http
+POST /wallets/generate/{campaign_id}
+```
+
+Creates wallets from all claim codes belonging to the campaign.
+
+---
+
+### Get All Wallets
+
+```http
+GET /wallets
+```
+
+---
+
+### Get Wallet By ID
+
+```http
+GET /wallets/{wallet_id}
+```
+
+---
+
+### Get Wallet By Claim Code
+
+```http
+GET /wallets/claim-code/{claim_code}
+```
+
+Example:
+
+```http
+GET /wallets/claim-code/ABC123
+```
+
+---
+
+## Wallet Features
 
 Implemented:
 
 ### Campaign Validation
 
+Ensure campaign exists.
+
+### Claim Code Validation
+
+Wallets are only generated from existing claim codes.
+
+### Duplicate Wallet Prevention
+
+A claim code can only have one wallet.
+
+### Automatic Balance Initialization
+
 ```text
-Campaign must exist
+Claim Code Amount
+      ↓
+Wallet Total Balance
+
+Claim Code Amount
+      ↓
+Wallet Available Balance
 ```
 
 ---
 
-### CSV Header Validation
-
-Required headers:
-
-```text
-claim_code
-amount
-email
-```
-
----
-
-### Duplicate Claim Codes In File
-
-Reject:
-
-```text
-ABC123
-ABC123
-```
-
----
-
-### Existing Claim Code Validation
-
-Prevents uploading a claim code already present in MongoDB.
-
----
-
-### Amount Validation
-
-Reject:
-
-```text
-0
--100
-```
-
-Accept:
-
-```text
-100
-200
-300
-```
-
----
-
-# Current System Flow
-
-```text
-Client
-   ↓
-Account
-   ↓
-Product
-   ↓
-Campaign
-   ↓
-Campaign Product Mapping
-   ↓
-Claim Codes
-```
-
----
-
-# Completed Phases
+# Current Project Status
 
 ```text
 ✅ Phase 1 - Foundation
@@ -699,58 +747,47 @@ Claim Codes
 ✅ Phase 5 - Campaign Module
 
 ✅ Phase 6 - Claim Codes Module
+
+✅ Phase 7 - Wallet Module
 ```
 
 ---
 
 # Upcoming Phases
 
-## Phase 7 - Wallet Module
-
-```text
-Claim Code
-    ↓
-Wallet
-```
-
-Features:
-
-- Wallet Creation
-- Balance Storage
-- Wallet Lookup
-- Wallet Validation
-
----
-
 ## Phase 8 - Order Module
 
+Relationship:
+
 ```text
 Wallet
-   ↓
-Orders
+    ↓
+Order
 ```
 
 Features:
 
-- Order Creation
-- Product Redemption
+- Redeem Product
+- Balance Validation
 - Balance Deduction
+- Order Creation
 - Order History
 
 ---
 
-# End Goal
+# Final Goal
 
-Build an intermediate-level Campaign CMS that can:
+Build a fully functional Campaign CMS capable of:
 
 ```text
-Manage Clients
-Manage Accounts
-Manage Products
-Manage Campaigns
-Upload Claim Codes
-Generate Wallets
-Create Reward Orders
+Managing Clients
+Managing Accounts
+Managing Products
+Managing Campaigns
+Uploading Claim Codes
+Generating Wallets
+Creating Orders
+Managing Reward Redemptions
 ```
 
-while following clean backend architecture using FastAPI and MongoDB.
+using FastAPI, MongoDB, and real-world backend architecture patterns.
