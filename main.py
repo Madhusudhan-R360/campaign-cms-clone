@@ -26,6 +26,10 @@ from api.wallets.app import (
     router as wallet_router
 )
 
+from api.orders.app import (
+    router as order_router
+)
+
 app = FastAPI(
     title="Campaign CMS Clone"
 )
@@ -63,4 +67,9 @@ app.include_router(
 app.include_router(
     wallet_router,
     tags=["Wallets"]
+)
+
+app.include_router(
+    order_router,
+    tags=["Orders"]
 )
