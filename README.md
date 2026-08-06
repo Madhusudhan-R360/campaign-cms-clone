@@ -2,29 +2,28 @@
 
 An intermediate-level Campaign CMS built using **FastAPI** and **MongoDB**.
 
-This project is inspired by the Reward360 Campaign CMS and has been rebuilt from scratch to understand the complete reward campaign lifecycle, including campaign administration, claim code management, wallet generation, and reward redemption.
+This project is inspired by enterprise reward management systems and recreates the complete reward lifecycle from campaign setup to order redemption.
 
 ---
 
 # Project Objective
 
-Build a Campaign CMS that can:
+Build a Campaign CMS capable of:
 
-- Manage Clients
-- Manage Accounts
-- Manage Products
-- Manage Campaigns
-- Map Products to Campaigns
-- Upload Claim Codes
-- Generate Wallets
-- Process Reward Redemptions
-- Track Orders
-
-The project mirrors the workflow of a real-world rewards platform.
+- Managing Clients
+- Managing Accounts
+- Managing Products
+- Managing Campaigns
+- Mapping Products to Campaigns
+- Uploading Claim Codes
+- Generating Wallets
+- Creating Orders
+- Managing Order Status Workflow
+- Tracking Reward Redemption Lifecycle
 
 ---
 
-# End-to-End Architecture
+# Complete System Architecture
 
 ```text
 Client
@@ -42,6 +41,8 @@ Claim Codes
 Wallets
    ↓
 Orders
+   ↓
+Order Status Workflow
 ```
 
 ---
@@ -65,39 +66,12 @@ campaign-cms-clone/
 ├── api/
 │
 │   ├── clients/
-│   │   ├── app.py
-│   │   ├── schema.py
-│   │   └── utility.py
-│   │
 │   ├── accounts/
-│   │   ├── app.py
-│   │   ├── schema.py
-│   │   └── utility.py
-│   │
 │   ├── products/
-│   │   ├── app.py
-│   │   ├── schema.py
-│   │   └── utility.py
-│   │
 │   ├── campaigns/
-│   │   ├── app.py
-│   │   ├── schema.py
-│   │   └── utility.py
-│   │
 │   ├── claim_codes/
-│   │   ├── app.py
-│   │   ├── schema.py
-│   │   └── utility.py
-│   │
 │   ├── wallets/
-│   │   ├── app.py
-│   │   ├── schema.py
-│   │   └── utility.py
-│   │
 │   └── orders/
-│       ├── app.py
-│       ├── schema.py
-│       └── utility.py
 │
 ├── db/
 │   ├── config.py
@@ -107,8 +81,8 @@ campaign-cms-clone/
 │   └── csv/
 │
 ├── main.py
-├── .env
 ├── requirements.txt
+├── .env
 └── README.md
 ```
 
@@ -130,13 +104,15 @@ order_items
 
 ---
 
-# Installation
+# Setup
 
 ## Create Virtual Environment
 
 ```bash
 python3 -m venv venv
 ```
+
+---
 
 ## Activate Environment
 
@@ -162,9 +138,9 @@ pip install -r requirements.txt
 
 ---
 
-# Environment Variables
+## Environment Variables
 
-Create `.env`:
+Create `.env`
 
 ```env
 MONGO_URL=mongodb://localhost:27017
@@ -173,7 +149,7 @@ DATABASE_NAME=campaign_cms
 
 ---
 
-# Run Application
+## Run Application
 
 ```bash
 uvicorn main:app --reload
@@ -217,9 +193,9 @@ Completed:
 - MongoDB Connection
 - Environment Configuration
 - Collection Definitions
-- Health Endpoint
+- Health Check Endpoint
 
-## Health Check
+## Health API
 
 ```http
 GET /health
@@ -238,15 +214,15 @@ Response:
 
 # Phase 2 - Client Module
 
-Represents the top-level organization.
+Represents the top-level business entity.
 
 Examples:
 
 ```text
 Samsung India
 HSBC
-Citibank
 MoneyMax
+Citibank
 ```
 
 ## APIs
@@ -259,17 +235,6 @@ GET /clients
 GET /clients/{client_id}
 
 PUT /clients/{client_id}
-```
-
-### Sample Request
-
-```json
-{
-  "client_name": "Samsung India",
-  "time_zone": "Asia/Kolkata",
-  "primary_contact": "rewards@samsung.com",
-  "active_status": true
-}
 ```
 
 ---
@@ -288,7 +253,7 @@ Example:
 
 ```text
 Samsung India
-      ↓
+     ↓
 Samsung eStore
 ```
 
@@ -342,22 +307,6 @@ GET /products/account/{account_id}
 PUT /products/{product_id}
 ```
 
-### Product Example
-
-```json
-{
-  "account_id": "...",
-  "sku": "AMZ500",
-  "name": "Amazon Gift Card ₹500",
-  "brand": "Amazon",
-  "category": "Gift Card",
-  "price": 500,
-  "stock_count": 1000,
-  "image_url": "https://amazon.com/logo.png",
-  "active_status": true
-}
-```
-
 ---
 
 # Phase 5 - Campaign Module
@@ -392,13 +341,13 @@ PUT /campaigns/{campaign_id}
 
 ## Campaign Product Mapping APIs
 
-### Link Product
+### Link Product To Campaign
 
 ```http
 POST /campaigns/{campaign_id}/products
 ```
 
-Request:
+Payload:
 
 ```json
 {
@@ -447,7 +396,7 @@ SAM1005,2000,rahul@gmail.com
 
 ---
 
-## Claim Code APIs
+## APIs
 
 ```http
 POST /claim-codes/upload/{campaign_id}
@@ -463,11 +412,9 @@ GET /claim-codes/campaign/{campaign_id}
 
 ## Validations
 
-Implemented:
-
-- Campaign Validation
+- Campaign Exists Validation
 - CSV Header Validation
-- Duplicate Claim Codes Validation
+- Duplicate Claim Code Validation
 - Existing Claim Code Validation
 - Amount Validation
 
@@ -475,7 +422,7 @@ Implemented:
 
 # Phase 7 - Wallet Module
 
-Wallets hold redeemable balances.
+Wallets store redeemable balances.
 
 Relationship:
 
@@ -485,24 +432,9 @@ Claim Code
 Wallet
 ```
 
-Example:
-
-```text
-Claim Code:
-SAM1001
-
-Amount:
-₹5000
-
-↓
-
-Wallet:
-₹5000
-```
-
 ---
 
-## Wallet Structure
+## Wallet Example
 
 ```json
 {
@@ -517,33 +449,13 @@ Wallet:
 
 ## Wallet APIs
 
-### Generate Wallets
-
 ```http
 POST /wallets/generate/{campaign_id}
-```
 
----
-
-### Get All Wallets
-
-```http
 GET /wallets
-```
 
----
-
-### Get Wallet By ID
-
-```http
 GET /wallets/{wallet_id}
-```
 
----
-
-### Get Wallet By Claim Code
-
-```http
 GET /wallets/claim-code/{claim_code}
 ```
 
@@ -560,7 +472,7 @@ GET /wallets/claim-code/{claim_code}
 
 # Phase 8 - Order Module
 
-This is where redemption occurs.
+Orders represent reward redemptions.
 
 Relationship:
 
@@ -572,111 +484,44 @@ Order
 
 ---
 
-# Redemption Flow
+## Order Creation Flow
 
 ```text
-Wallet Balance
-      ↓
-Product Selected
-      ↓
+Wallet
+    ↓
 Balance Validation
-      ↓
+    ↓
+Product Validation
+    ↓
 Order Creation
-      ↓
+    ↓
 Wallet Deduction
 ```
 
 ---
 
-## Example
-
-Initial Wallet:
-
-```text
-Claim Code:
-SAM1001
-
-Available Balance:
-₹5000
-```
-
-Redeem:
-
-```text
-Amazon Gift Card ₹500
-
-Quantity = 2
-```
-
-Cost:
-
-```text
-₹1000
-```
-
-Updated Wallet:
-
-```text
-Available Balance = ₹4000
-
-Consumed Balance = ₹1000
-```
-
----
-
-## Order Structure
+## Order Example
 
 ```json
 {
   "claim_code": "SAM1001",
   "product_name": "Amazon Gift Card ₹500",
   "quantity": 2,
-  "amount": 1000,
-  "status": "completed"
+  "amount": 1000
 }
 ```
 
 ---
 
-## Order APIs
-
-### Create Order
+## APIs
 
 ```http
 POST /orders
-```
 
-Request:
-
-```json
-{
-  "claim_code": "SAM1001",
-  "product_id": "<product_id>",
-  "quantity": 2
-}
-```
-
----
-
-### Get All Orders
-
-```http
 GET /orders
-```
 
----
-
-### Get Order By ID
-
-```http
 GET /orders/{order_id}
-```
 
----
-
-### Get Orders By Claim Code
-
-```http
 GET /orders/claim-code/{claim_code}
 ```
 
@@ -684,100 +529,237 @@ GET /orders/claim-code/{claim_code}
 
 ## Features
 
-Implemented:
+- Wallet Validation
+- Product Validation
+- Balance Validation
+- Automatic Wallet Deduction
 
-### Wallet Validation
+---
+
+# Phase 9 - Order Status Workflow
+
+This phase introduces enterprise-style order lifecycle management.
+
+Previously:
 
 ```text
-Wallet must exist
+Order
+   ↓
+completed
 ```
 
-### Product Validation
+Now:
 
 ```text
-Product must exist
+pending
+   ↓
+processing
+   ↓
+completed
 ```
 
-### Balance Validation
+or
 
 ```text
-Wallet Balance >= Order Value
+pending
+   ↓
+cancelled
 ```
 
-### Automatic Wallet Deduction
+or
 
 ```text
-Available Balance ↓
-
-Consumed Balance ↑
+pending
+   ↓
+failed
 ```
 
 ---
 
-# End-to-End Test Scenario
+# Order Status Lifecycle
 
-## Client
+```text
+pending
+   ├── processing
+   ├── cancelled
+   └── failed
+
+processing
+   ├── completed
+   └── failed
+
+completed
+   └── terminal
+
+cancelled
+   └── terminal
+
+failed
+   └── terminal
+```
+
+---
+
+# Order Status APIs
+
+## Update Order Status
+
+```http
+PATCH /orders/{order_id}/status
+```
+
+Example:
+
+```json
+{
+  "status": "processing"
+}
+```
+
+---
+
+## Get Orders By Status
+
+```http
+GET /orders/status/{status}
+```
+
+Examples:
+
+```http
+GET /orders/status/pending
+
+GET /orders/status/processing
+
+GET /orders/status/completed
+
+GET /orders/status/cancelled
+
+GET /orders/status/failed
+```
+
+---
+
+# Supported Status Values
+
+```text
+pending
+processing
+completed
+cancelled
+failed
+```
+
+---
+
+# Status Transition Rules
+
+## Allowed
+
+```text
+pending → processing
+
+pending → cancelled
+
+pending → failed
+
+processing → completed
+
+processing → failed
+```
+
+---
+
+## Not Allowed
+
+```text
+completed → processing
+
+completed → pending
+
+cancelled → completed
+
+failed → processing
+```
+
+Terminal statuses cannot be modified.
+
+---
+
+# Example Workflow
+
+## Step 1
+
+Create Order
+
+```text
+Status = pending
+```
+
+---
+
+## Step 2
+
+Operations Team Starts Processing
+
+```text
+pending
+   ↓
+processing
+```
+
+---
+
+## Step 3
+
+Voucher Delivered
+
+```text
+processing
+   ↓
+completed
+```
+
+---
+
+## Step 4
+
+Failure Scenario
+
+```text
+pending
+   ↓
+failed
+```
+
+---
+
+# Example End-to-End Flow
 
 ```text
 Samsung India
-```
-
-## Account
-
-```text
+        ↓
 Samsung eStore
-```
-
-## Products
-
-```text
+        ↓
 Amazon Gift Card ₹500
-
-Flipkart Gift Card ₹1000
-
-Myntra Voucher ₹750
-```
-
-## Campaign
-
-```text
+        ↓
 Samsung Welcome Rewards 2026
-```
-
-## Claim Codes
-
-```text
-SAM1001 = ₹5000
-
-SAM1002 = ₹3000
-
-SAM1003 = ₹10000
-```
-
-## Wallets
-
-```text
-SAM1001 → ₹5000
-
-SAM1002 → ₹3000
-
-SAM1003 → ₹10000
-```
-
-## Orders
-
-```text
+        ↓
+Claim Code:
 SAM1001
-
-Amazon ₹500 × 2
-
-Total = ₹1000
-```
-
-Wallet Balance:
-
-```text
-₹5000 → ₹4000
+        ↓
+Wallet:
+₹5000
+        ↓
+Order:
+₹1000
+        ↓
+Status:
+Pending
+        ↓
+Processing
+        ↓
+Completed
 ```
 
 ---
@@ -800,13 +782,54 @@ Wallet Balance:
 ✅ Phase 7 - Wallet Module
 
 ✅ Phase 8 - Order Module
+
+✅ Phase 9 - Order Status Workflow
+```
+
+---
+
+# Recommended Next Phases
+
+## Phase 10
+
+Wallet Transaction History
+
+```text
+Wallet
+   ↓
+Credit / Debit Logs
+```
+
+---
+
+## Phase 11
+
+Order Cancellation + Wallet Refund
+
+```text
+Cancel Order
+      ↓
+Refund Wallet
+```
+
+---
+
+## Phase 12
+
+Campaign Analytics Dashboard
+
+```text
+Campaign Summary
+Redemption Statistics
+Wallet Utilization
+Order Metrics
 ```
 
 ---
 
 # Final Outcome
 
-The system now supports the complete reward lifecycle:
+The Campaign CMS now supports the complete reward redemption lifecycle:
 
 ```text
 Client Creation
@@ -816,4 +839,18 @@ Account Creation
 Product Creation
        ↓
 Campaign Creation
-       
+       ↓
+Campaign Product Mapping
+       ↓
+Claim Code Upload
+       ↓
+Wallet Generation
+       ↓
+Order Creation
+       ↓
+Wallet Deduction
+       ↓
+Order Status Workflow
+```
+
+This results in a functional, intermediate-level Campaign CMS closely resembling the workflow of a real reward management platform.
