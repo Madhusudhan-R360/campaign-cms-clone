@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import Literal
 
 class CreateOrderSchema(BaseModel):
 
@@ -8,3 +8,12 @@ class CreateOrderSchema(BaseModel):
     product_id: str
 
     quantity: int = 1
+
+class UpdateOrderStatusSchema(BaseModel):
+
+    status: Literal[
+        "processing",
+        "completed",
+        "cancelled",
+        "failed"
+    ]
