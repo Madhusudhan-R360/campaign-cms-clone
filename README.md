@@ -1,8 +1,8 @@
 # Campaign CMS Clone
 
-An intermediate-level Campaign CMS built using **FastAPI** and **MongoDB**.
+An intermediate-to-advanced Campaign CMS built using **FastAPI** and **MongoDB**.
 
-This project is inspired by enterprise reward management systems and recreates the complete reward lifecycle from campaign creation to wallet redemption, order processing, and transaction tracking.
+This project recreates the complete reward lifecycle used in enterprise reward and loyalty platforms, from campaign creation to reward redemption, transaction tracking, and refund processing.
 
 ---
 
@@ -18,9 +18,9 @@ Build a Campaign CMS capable of:
 - Uploading Claim Codes
 - Generating Wallets
 - Creating Orders
-- Managing Order Status Workflows
+- Managing Order Statuses
 - Tracking Wallet Transactions
-- Supporting Future Refund & Reversal Flows
+- Supporting Order Cancellation & Refunds
 
 ---
 
@@ -46,6 +46,8 @@ Wallet Transactions
 Orders
    ↓
 Order Status Workflow
+   ↓
+Refund Workflow
 ```
 
 ---
@@ -74,8 +76,8 @@ campaign-cms-clone/
 │   ├── campaigns/
 │   ├── claim_codes/
 │   ├── wallets/
-│   ├── orders/
-│   └── wallet_transactions/
+│   ├── wallet_transactions/
+│   └── orders/
 │
 ├── db/
 │   ├── config.py
@@ -85,8 +87,8 @@ campaign-cms-clone/
 │   └── csv/
 │
 ├── main.py
-├── requirements.txt
 ├── .env
+├── requirements.txt
 └── README.md
 ```
 
@@ -109,7 +111,7 @@ order_items
 
 ---
 
-# Environment Setup
+# Setup
 
 ## Create Virtual Environment
 
@@ -158,7 +160,7 @@ DATABASE_NAME=campaign_cms
 uvicorn main:app --reload
 ```
 
-Swagger:
+Swagger UI:
 
 ```text
 http://localhost:8000/docs
@@ -166,24 +168,32 @@ http://localhost:8000/docs
 
 ---
 
-# Business Flow
+# Complete Business Flow
 
 ```text
-Samsung India
-      ↓
-Samsung eStore
-      ↓
-Amazon Gift Card ₹500
-      ↓
-Samsung Welcome Rewards 2026
-      ↓
-Claim Code
-      ↓
-Wallet
-      ↓
+Client
+   ↓
+Account
+   ↓
+Product
+   ↓
+Campaign
+   ↓
+Campaign Product Mapping
+   ↓
+Claim Code Upload
+   ↓
+Wallet Generation
+   ↓
+Order Creation
+   ↓
+Wallet Deduction
+   ↓
 Wallet Transaction
-      ↓
-Order
+   ↓
+Order Status Workflow
+   ↓
+Refund Workflow
 ```
 
 ---
@@ -193,12 +203,12 @@ Order
 Completed:
 
 - FastAPI Setup
-- MongoDB Connection
+- MongoDB Setup
 - Environment Configuration
-- Collection Configuration
+- Collection Definitions
 - Health Endpoint
 
-## Health Check
+## API
 
 ```http
 GET /health
@@ -214,9 +224,9 @@ Examples:
 
 ```text
 Samsung India
-MoneyMax
 HSBC
 Citibank
+MoneyMax
 ```
 
 ## APIs
@@ -234,8 +244,6 @@ PUT /clients/{client_id}
 ---
 
 # Phase 3 - Account Module
-
-Represents business units under a client.
 
 Relationship:
 
@@ -271,7 +279,7 @@ PUT /accounts/{account_id}
 
 # Phase 4 - Product Module
 
-Represents redeemable rewards.
+Products represent rewards available for redemption.
 
 Examples:
 
@@ -301,16 +309,16 @@ PUT /products/{product_id}
 
 # Phase 5 - Campaign Module
 
-Represents reward programs.
+Campaigns represent reward programs.
 
 Examples:
 
 ```text
 Samsung Welcome Rewards 2026
 
-Samsung Referral Campaign
+Samsung Festive rewards
 
-Samsung Festive Rewards
+Samsung Referral Campaign
 ```
 
 ## APIs
@@ -327,9 +335,9 @@ PUT /campaigns/{campaign_id}
 
 ---
 
-## Campaign Product Mapping
+## Campaign Product Mapping APIs
 
-### Link Product To Campaign
+### Link Product
 
 ```http
 POST /campaigns/{campaign_id}/products
@@ -341,21 +349,11 @@ POST /campaigns/{campaign_id}/products
 GET /campaigns/{campaign_id}/products
 ```
 
-Relationship:
-
-```text
-Campaign
-      ↓
-Campaign Product Link
-      ↓
-Product
-```
-
 ---
 
 # Phase 6 - Claim Code Module
 
-Claim Codes represent reward entitlements.
+Claim codes represent reward balances.
 
 Example:
 
@@ -366,19 +364,6 @@ SAM1002 = ₹3000
 
 SAM1003 = ₹10000
 ```
-
----
-
-## CSV Upload Format
-
-```csv
-claim_code,amount,email
-SAM1001,5000,arjun@gmail.com
-SAM1002,3000,priya@gmail.com
-SAM1003,10000,vikram@gmail.com
-```
-
----
 
 ## APIs
 
@@ -394,13 +379,24 @@ GET /claim-codes/campaign/{campaign_id}
 
 ---
 
+## CSV Format
+
+```csv
+claim_code,amount,email
+SAM1001,5000,arjun@gmail.com
+SAM1002,3000,priya@gmail.com
+SAM1003,10000,vikram@gmail.com
+```
+
+---
+
 ## Validations
 
-- Campaign Exists Validation
-- CSV Header Validation
-- Duplicate Claim Codes Validation
-- Existing Claim Code Validation
-- Positive Amount Validation
+- Campaign validation
+- CSV structure validation
+- Duplicate claim code validation
+- Existing claim code validation
+- Positive amount validation
 
 ---
 
@@ -447,38 +443,23 @@ GET /wallets/claim-code/{claim_code}
 
 ## Features
 
-- Campaign Validation
-- Claim Code Validation
-- Duplicate Wallet Prevention
-- Automatic Wallet Creation
-- Automatic Balance Initialization
+- Automatic wallet generation
+- Claim code validation
+- Duplicate wallet prevention
+- Balance initialization
 
 ---
 
 # Phase 8 - Order Module
 
-Orders represent product redemptions.
+Orders represent reward redemptions.
 
 Relationship:
 
 ```text
 Wallet
-    ↓
+      ↓
 Order
-```
-
----
-
-## Order Flow
-
-```text
-Wallet
-   ↓
-Balance Validation
-   ↓
-Order Creation
-   ↓
-Wallet Deduction
 ```
 
 ---
@@ -499,16 +480,16 @@ GET /orders/claim-code/{claim_code}
 
 ## Features
 
-- Wallet Validation
-- Product Validation
-- Insufficient Balance Validation
-- Automatic Balance Deduction
+- Wallet validation
+- Product validation
+- Balance validation
+- Wallet deduction
 
 ---
 
 # Phase 9 - Order Status Workflow
 
-Introduced enterprise-style order lifecycle management.
+Introduced enterprise order lifecycle.
 
 ---
 
@@ -524,7 +505,7 @@ failed
 
 ---
 
-## Status Lifecycle
+## Workflow
 
 ```text
 pending
@@ -562,53 +543,31 @@ PATCH /orders/{order_id}/status
 GET /orders/status/{status}
 ```
 
-Examples:
-
-```http
-GET /orders/status/pending
-
-GET /orders/status/processing
-
-GET /orders/status/completed
-
-GET /orders/status/cancelled
-
-GET /orders/status/failed
-```
-
 ---
 
 ## Features
 
-- Status Transition Validation
-- Terminal State Protection
-- Workflow Management
-- Order Lifecycle Tracking
+- Status transition validation
+- Terminal state protection
+- Workflow tracking
 
 ---
 
 # Phase 10 - Wallet Transaction History
 
-Introduced wallet audit tracking.
+Introduced full wallet audit trail.
 
 Relationship:
 
 ```text
 Wallet
-     ↓
-Wallet Transactions
-```
-
-Purpose:
-
-```text
-Track every balance movement
-inside a wallet.
+      ↓
+Wallet Transaction
 ```
 
 ---
 
-# Transaction Types
+## Transaction Types
 
 ```text
 debit
@@ -625,123 +584,207 @@ credit
   "transaction_type": "debit",
   "amount": 1000,
   "reference": "ORDER_123",
-  "description": "Order redemption for Amazon Gift Card ₹500"
+  "description": "Order redemption"
 }
 ```
 
 ---
 
-## Future Credit Transaction
+## APIs
+
+### Get All Transactions
+
+```http
+GET /wallet-transactions
+```
+
+### Get Transaction By Id
+
+```http
+GET /wallet-transactions/{transaction_id}
+```
+
+### Get Transactions By Claim Code
+
+```http
+GET /wallet-transactions/claim-code/{claim_code}
+```
+
+---
+
+## Features
+
+- Automatic debit transaction creation
+- Wallet audit tracking
+- Transaction lookup
+- Claim code transaction history
+
+---
+
+# Phase 11 - Order Cancellation & Wallet Refund
+
+Introduced refund and balance restoration workflow.
+
+Relationship:
+
+```text
+Order
+   ↓
+Cancellation
+   ↓
+Wallet Refund
+   ↓
+Credit Transaction
+```
+
+---
+
+# Cancellation Workflow
+
+```text
+Create Order
+      ↓
+Wallet Debit
+      ↓
+Debit Transaction
+
+Cancel Order
+      ↓
+Wallet Refund
+      ↓
+Credit Transaction
+      ↓
+Order Status = Cancelled
+```
+
+---
+
+## Business Rules
+
+### Allowed
+
+```text
+pending → cancelled
+
+processing → cancelled
+```
+
+### Not Allowed
+
+```text
+completed → cancelled
+
+failed → cancelled
+
+cancelled → cancelled
+```
+
+---
+
+## API
+
+### Cancel Order
+
+```http
+POST /orders/{order_id}/cancel
+```
+
+---
+
+## Refund Flow Example
+
+### Initial Wallet
+
+```json
+{
+  "available_balance": 5000,
+  "consumed_balance": 0
+}
+```
+
+### Create Order
+
+```text
+Order Amount = 1000
+```
+
+Wallet becomes:
+
+```json
+{
+  "available_balance": 4000,
+  "consumed_balance": 1000
+}
+```
+
+### Cancel Order
+
+```http
+POST /orders/{order_id}/cancel
+```
+
+Wallet becomes:
+
+```json
+{
+  "available_balance": 5000,
+  "consumed_balance": 0
+}
+```
+
+---
+
+## Credit Transaction
+
+Created automatically:
 
 ```json
 {
   "claim_code": "SAM1001",
   "transaction_type": "credit",
   "amount": 1000,
-  "reference": "REFUND_123",
-  "description": "Order Refund"
+  "reference": "ORDER_ID",
+  "description": "Refund for order"
 }
 ```
 
 ---
 
-# Wallet Transaction APIs
+## Features
 
-## Get All Transactions
-
-```http
-GET /wallet-transactions
-```
-
----
-
-## Get Transaction By ID
-
-```http
-GET /wallet-transactions/{transaction_id}
-```
+- Order cancellation
+- Wallet refund
+- Automatic credit transaction logging
+- Refund audit trail
+- Status update to cancelled
+- Double refund prevention
 
 ---
 
-## Get Transactions By Claim Code
-
-```http
-GET /wallet-transactions/claim-code/{claim_code}
-```
-
-Example:
-
-```http
-GET /wallet-transactions/claim-code/SAM1001
-```
-
----
-
-# Automatic Transaction Logging
-
-Whenever an order is created:
+# Complete Example Scenario
 
 ```text
-Order Created
+Samsung India
       ↓
-Wallet Deducted
+Samsung eStore
       ↓
-Debit Transaction Recorded
-```
-
-Example:
-
-```text
-Wallet = ₹5000
-
-Redeem Amazon ₹500
+Amazon Gift Card ₹500
       ↓
-Wallet = ₹4500
+Samsung Welcome Rewards 2026
       ↓
-Transaction Added
-```
-
----
-
-# Wallet Audit Trail Example
-
-```text
-Claim Code:
 SAM1001
-
-Transactions:
-
-Debit   ₹1000
-Debit   ₹500
-Debit   ₹750
-```
-
-This allows administrators to understand exactly how wallet balances changed over time.
-
----
-
-# Current System Flow
-
-```text
-Client
-   ↓
-Account
-   ↓
-Product
-   ↓
-Campaign
-   ↓
-Campaign Product Mapping
-   ↓
-Claim Codes
-   ↓
-Wallets
-   ↓
-Wallet Transactions
-   ↓
-Orders
-   ↓
-Order Status Workflow
+      ↓
+Wallet ₹5000
+      ↓
+Order ₹1000
+      ↓
+Wallet ₹4000
+      ↓
+Cancel Order
+      ↓
+Wallet ₹5000
+      ↓
+Credit Transaction ₹1000
 ```
 
 ---
@@ -759,7 +802,7 @@ Order Status Workflow
 
 ✅ Phase 5 - Campaign Module
 
-✅ Phase 6 - Claim Codes Module
+✅ Phase 6 - Claim Code Module
 
 ✅ Phase 7 - Wallet Module
 
@@ -768,72 +811,86 @@ Order Status Workflow
 ✅ Phase 9 - Order Status Workflow
 
 ✅ Phase 10 - Wallet Transaction History
+
+✅ Phase 11 - Order Cancellation & Wallet Refund
 ```
 
 ---
 
-# Recommended Next Phase
-
-## Phase 11 - Order Cancellation & Wallet Refund
-
-Workflow:
+# Current System Capabilities
 
 ```text
-Order Cancelled
-      ↓
-Wallet Refunded
-      ↓
-Credit Transaction Added
-      ↓
-Balance Restored
+Client Management
+
+Account Management
+
+Product Management
+
+Campaign Management
+
+Campaign Product Mapping
+
+Claim Code Upload
+
+Wallet Generation
+
+Order Creation
+
+Wallet Deduction
+
+Order Status Lifecycle
+
+Wallet Transaction Tracking
+
+Order Cancellation
+
+Wallet Refund Processing
+
+Transaction Audit Trail
 ```
 
-Example:
+---
+
+# Recommended Future Enhancements
 
 ```text
-Order Value = ₹1000
+Campaign Analytics Dashboard
 
-Available Balance = ₹4000
+Inventory Management
 
-Cancel Order
-      ↓
+RBAC (Role Based Access Control)
 
-Available Balance = ₹5000
+Approval Workflow
 
-Transaction:
-Credit ₹1000
+Campaign Clone
+
+Claim Code Expiry
+
+Scheduled Campaign Activation
 ```
-
-This would bring the CMS even closer to a real enterprise rewards platform.
 
 ---
 
 # Final Outcome
 
-The system now supports a complete reward management lifecycle:
+The Campaign CMS now supports a complete reward management lifecycle with:
 
 ```text
-Client Creation
-      ↓
-Account Creation
-      ↓
-Product Management
-      ↓
-Campaign Management
-      ↓
-Campaign Product Mapping
+Campaign Setup
       ↓
 Claim Code Upload
       ↓
 Wallet Generation
       ↓
-Wallet Transaction Tracking
+Reward Redemption
       ↓
-Order Creation
+Wallet Accounting
       ↓
-Balance Deduction
+Order Workflow
       ↓
-Order Status Workflow
+Transaction Tracking
+      ↓
+Refund Processing
 ```
 
-This represents a solid intermediate-to-advanced Campaign CMS built using FastAPI and MongoDB.
+This closely resembles a real-world enterprise rewards and campaign management platform built using FastAPI and MongoDB.
