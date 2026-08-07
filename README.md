@@ -1,61 +1,27 @@
 # Campaign CMS Clone
 
-An enterprise-style Campaign CMS built using **FastAPI**, **MongoDB**, **JWT Authentication**, and **Docker**.
+A production-style Campaign CMS built using **FastAPI**, **MongoDB**, **JWT Authentication**, **Docker**, and **Pytest**.
 
-This project recreates the complete reward lifecycle used in real-world rewards and loyalty platforms, including campaign management, wallet management, order processing, transaction auditing, refund workflows, authentication, and containerization.
+The project simulates a complete rewards and redemption platform used by enterprises to manage campaigns, claim codes, wallets, orders, transactions, and refunds.
 
 ---
 
 # Project Objective
 
-Build a Campaign CMS capable of:
+Build a backend system capable of managing:
 
-- Managing Clients
-- Managing Accounts
-- Managing Products
-- Managing Campaigns
-- Campaign Product Mapping
-- Claim Code Upload
-- Wallet Generation
-- Order Creation
-- Order Lifecycle Management
+- Clients
+- Accounts
+- Products
+- Campaigns
+- Claim Codes
+- Wallets
+- Orders
 - Wallet Transactions
-- Refund Processing
+- Refunds
 - JWT Authentication
 - Dockerized Deployment
-
----
-
-# Complete System Architecture
-
-```text
-User
-   ↓
-JWT Authentication
-   ↓
-
-Client
-   ↓
-Account
-   ↓
-Product
-   ↓
-Campaign
-   ↓
-Campaign Product Mapping
-   ↓
-Claim Codes
-   ↓
-Wallets
-   ↓
-Wallet Transactions
-   ↓
-Orders
-   ↓
-Order Status Workflow
-   ↓
-Refund Workflow
-```
+- Automated Testing
 
 ---
 
@@ -64,29 +30,72 @@ Refund Workflow
 ## Backend
 
 - FastAPI
-- Pydantic
 - Uvicorn
+- Pydantic
 
 ## Database
 
 - MongoDB
 - Motor
 
-## Security
+## Authentication
 
-- JWT Authentication
+- JWT
 - python-jose
 - passlib
 - bcrypt
+
+## Data Processing
+
+- Pandas
 
 ## DevOps
 
 - Docker
 - Docker Compose
 
-## Data Processing
+## Testing
 
-- Pandas
+- Pytest
+- FastAPI TestClient
+
+---
+
+# System Architecture
+
+```text
+User
+   |
+   v
+JWT Authentication
+   |
+   v
+Client
+   |
+   v
+Account
+   |
+   v
+Product
+   |
+   v
+Campaign
+   |
+   v
+Claim Codes
+   |
+   v
+Wallets
+   |
+   v
+Orders
+   |
+   v
+Wallet Transactions
+   |
+   v
+Refund Workflow
+```
 
 ---
 
@@ -96,12 +105,7 @@ Refund Workflow
 campaign-cms-clone/
 
 ├── api/
-│
 │   ├── auth/
-│   │   ├── app.py
-│   │   ├── schema.py
-│   │   └── utility.py
-│   │
 │   ├── clients/
 │   ├── accounts/
 │   ├── products/
@@ -118,24 +122,28 @@ campaign-cms-clone/
 │   ├── config.py
 │   └── connection.py
 │
-├── uploads/
-│   └── csv/
+├── tests/
+│   ├── conftest.py
+│   ├── test_auth.py
+│   ├── test_clients.py
+│   └── test_health.py
 │
-├── Dockerfile
-├── docker-compose.yml
-├── .dockerignore
+├── uploads/
 │
 ├── main.py
 ├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── pytest.ini
 ├── .env
 └── README.md
 ```
 
 ---
 
-# MongoDB Collections
+# Database Collections
 
-```python
+```text
 clients
 accounts
 products
@@ -143,8 +151,9 @@ campaigns
 campaign_products_link
 claim_codes
 wallets
-wallet_transactions
 orders
+order_items
+wallet_transactions
 users
 ```
 
@@ -152,7 +161,7 @@ users
 
 # Environment Variables
 
-Create `.env`
+Create a `.env` file:
 
 ```env
 MONGO_URL=mongodb://localhost:27017
@@ -163,15 +172,20 @@ DATABASE_NAME=campaign_cms
 
 # Installation
 
+## Clone Repository
+
+```bash
+git clone <repository-url>
+cd campaign-cms-clone
+```
+
 ## Create Virtual Environment
 
 ```bash
 python3 -m venv venv
 ```
 
----
-
-## Activate Environment
+## Activate Virtual Environment
 
 Linux / Mac
 
@@ -185,8 +199,6 @@ Windows
 venv\Scripts\activate
 ```
 
----
-
 ## Install Dependencies
 
 ```bash
@@ -195,35 +207,37 @@ pip install -r requirements.txt
 
 ---
 
-# Run Locally
+# Run Application
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Swagger:
+Application:
+
+```text
+http://localhost:8000
+```
+
+Swagger Documentation:
 
 ```text
 http://localhost:8000/docs
 ```
 
----
+OpenAPI Schema:
 
-# Docker Support
-
-The application is fully containerized.
-
-## Dockerfile
-
-The application is packaged into a Docker container running FastAPI.
+```text
+http://localhost:8000/openapi.json
+```
 
 ---
+
+# Docker Setup
+
+The FastAPI application runs inside Docker and connects to the existing MongoDB instance.
 
 ## Docker Compose
-
-The FastAPI application runs inside Docker while connecting to the existing MongoDB instance.
-
-### docker-compose.yml
 
 ```yaml
 services:
@@ -246,23 +260,19 @@ services:
 
 ---
 
-## Build Docker Image
+## Build
 
 ```bash
 docker compose build
 ```
 
----
-
-## Run Container
+## Start
 
 ```bash
 docker compose up
 ```
 
----
-
-## Stop Container
+## Stop
 
 ```bash
 docker compose down
@@ -270,57 +280,74 @@ docker compose down
 
 ---
 
-## Swagger
+# Authentication
 
-```text
-http://localhost:8000/docs
+## Register User
+
+### Endpoint
+
+```http
+POST /auth/register
+```
+
+### Request
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "User registered"
+}
 ```
 
 ---
 
-# Complete Business Flow
+## Login
 
-```text
-Client
-   ↓
-Account
-   ↓
-Product
-   ↓
-Campaign
-   ↓
-Campaign Product Mapping
-   ↓
-Claim Code Upload
-   ↓
-Wallet Generation
-   ↓
-Order Creation
-   ↓
-Wallet Deduction
-   ↓
-Wallet Transaction
-   ↓
-Order Status Workflow
-   ↓
-Refund Processing
+### Endpoint
+
+```http
+POST /auth/login
+```
+
+### Request
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "access_token": "<jwt-token>",
+  "token_type": "bearer"
+}
 ```
 
 ---
 
-# Phase 1 - Foundation
+## Authorization Header
 
-Completed:
-
-- FastAPI Setup
-- MongoDB Setup
-- Environment Configuration
-- Collection Configuration
-- Health Endpoint
+```http
+Authorization: Bearer <token>
+```
 
 ---
 
-# Phase 2 - Client Module
+# Client Module
 
 Represents organizations using the platform.
 
@@ -328,8 +355,8 @@ Examples:
 
 ```text
 Samsung India
-HSBC
 Citibank
+HSBC
 MoneyMax
 ```
 
@@ -347,22 +374,18 @@ PUT /clients/{client_id}
 
 ---
 
-# Phase 3 - Account Module
+# Account Module
 
-Relationship:
-
-```text
-Client
-   ↓
-Account
-```
+Each Client can have multiple Accounts.
 
 Example:
 
 ```text
 Samsung India
-      ↓
-Samsung eStore
+   |
+   +-- Samsung eStore
+   |
+   +-- Samsung Rewards
 ```
 
 ## APIs
@@ -381,18 +404,20 @@ PUT /accounts/{account_id}
 
 ---
 
-# Phase 4 - Product Module
+# Product Module
 
-Products represent redeemable rewards.
+Represents redeemable rewards.
 
 Examples:
 
 ```text
-Amazon Gift Card ₹500
+Amazon Gift Card
 
-Flipkart Gift Card ₹1000
+Flipkart Voucher
 
-Myntra Voucher ₹750
+Myntra Coupon
+
+Croma Gift Card
 ```
 
 ## APIs
@@ -411,18 +436,18 @@ PUT /products/{product_id}
 
 ---
 
-# Phase 5 - Campaign Module
+# Campaign Module
 
-Campaigns represent reward programs.
+Campaigns contain products and claim codes.
 
 Examples:
 
 ```text
-Samsung Welcome Rewards 2026
-
-Samsung Referral Campaign
+Samsung Welcome Rewards
 
 Samsung Festive Rewards
+
+Referral Rewards Campaign
 ```
 
 ## APIs
@@ -441,6 +466,8 @@ PUT /campaigns/{campaign_id}
 
 ## Campaign Product Mapping
 
+### APIs
+
 ```http
 POST /campaigns/{campaign_id}/products
 
@@ -449,15 +476,19 @@ GET /campaigns/{campaign_id}/products
 
 ---
 
-# Phase 6 - Claim Code Module
+# Claim Code Module
 
-Claim Codes represent reward allocations.
+Claim codes represent user reward allocations.
+
+## Upload API
+
+```http
+POST /claim-codes/upload/{campaign_id}
+```
 
 ## APIs
 
 ```http
-POST /claim-codes/upload/{campaign_id}
-
 GET /claim-codes
 
 GET /claim-codes/{claim_code_id}
@@ -471,26 +502,17 @@ GET /claim-codes/campaign/{campaign_id}
 
 ```csv
 claim_code,amount,email
-SAM1001,5000,arjun@gmail.com
-SAM1002,3000,priya@gmail.com
-SAM1003,10000,vikram@gmail.com
+
+SAM1001,5000,john@gmail.com
+SAM1002,2500,mary@gmail.com
+SAM1003,10000,david@gmail.com
 ```
 
 ---
 
-## Features
+# Wallet Module
 
-- Campaign Validation
-- CSV Validation
-- Duplicate Validation
-- Existing Claim Code Validation
-- Positive Amount Validation
-
----
-
-# Phase 7 - Wallet Module
-
-Wallets store redeemable balances.
+Wallets are generated from claim codes.
 
 ## APIs
 
@@ -519,9 +541,9 @@ GET /wallets/claim-code/{claim_code}
 
 ---
 
-# Phase 8 - Order Module
+# Order Module
 
-Orders represent redemptions.
+Orders represent reward redemptions.
 
 ## APIs
 
@@ -537,16 +559,24 @@ GET /orders/claim-code/{claim_code}
 
 ---
 
-## Features
+## Order Flow
 
-- Product Validation
-- Wallet Validation
-- Balance Validation
-- Wallet Deduction
+```text
+Wallet
+  |
+  v
+Order Created
+  |
+  v
+Balance Deducted
+  |
+  v
+Transaction Created
+```
 
 ---
 
-# Phase 9 - Order Status Workflow
+# Order Status Workflow
 
 Supported statuses:
 
@@ -558,28 +588,22 @@ cancelled
 failed
 ```
 
----
-
-## Workflow
+Workflow:
 
 ```text
 pending
-   ├── processing
-   ├── cancelled
-   └── failed
+  |
+  +--> processing
+  |
+  +--> cancelled
+  |
+  +--> failed
 
 processing
-   ├── completed
-   └── failed
-
-completed
-   └── terminal
-
-cancelled
-   └── terminal
-
-failed
-   └── terminal
+  |
+  +--> completed
+  |
+  +--> failed
 ```
 
 ---
@@ -594,11 +618,11 @@ GET /orders/status/{status}
 
 ---
 
-# Phase 10 - Wallet Transaction History
+# Wallet Transaction Module
 
-Introduced wallet auditing.
+Provides complete audit history.
 
-## Transaction Types
+Transaction Types:
 
 ```text
 debit
@@ -617,18 +641,9 @@ GET /wallet-transactions/claim-code/{claim_code}
 
 ---
 
-## Features
+# Refund Workflow
 
-- Automatic Debit Transaction Creation
-- Audit Trail
-- Transaction History
-- Redemption Tracking
-
----
-
-# Phase 11 - Order Cancellation & Refund
-
-Introduced wallet refund workflow.
+Allows cancelled orders to be refunded.
 
 ## API
 
@@ -638,188 +653,84 @@ POST /orders/{order_id}/cancel
 
 ---
 
-## Workflow
+## Refund Flow
 
 ```text
 Order Created
-      ↓
-Wallet Deduction
-      ↓
+      |
+      v
+Balance Deduction
+      |
+      v
 Debit Transaction
-
-Cancel Order
-      ↓
-Wallet Refund
-      ↓
+      |
+      v
+Order Cancelled
+      |
+      v
+Wallet Refunded
+      |
+      v
 Credit Transaction
-      ↓
-Status = Cancelled
 ```
 
 ---
 
-## Features
+# Security Features
 
-- Wallet Refund
-- Credit Transaction Logging
-- Refund Auditing
-- Double Refund Prevention
+✅ Password Hashing
 
----
+✅ JWT Token Generation
 
-# Phase 12 - JWT Authentication
+✅ JWT Verification
 
-Introduced secure API access.
+✅ Protected Endpoints
 
----
-
-## Register
-
-```http
-POST /auth/register
-```
-
-Request:
-
-```json
-{
-  "username": "admin",
-  "password": "admin123"
-}
-```
+✅ Unauthorized Access Prevention
 
 ---
 
-## Login
+# Testing
 
-```http
-POST /auth/login
-```
-
-Request:
-
-```json
-{
-  "username": "admin",
-  "password": "admin123"
-}
-```
-
-Response:
-
-```json
-{
-  "success": true,
-  "access_token": "jwt_token",
-  "token_type": "bearer"
-}
-```
-
----
-
-## Security Features
-
-- Password Hashing using bcrypt
-- JWT Token Generation
-- JWT Token Validation
-- Protected Endpoints
-
----
-
-## Protected APIs
-
-Examples:
-
-```http
-POST /clients
-
-POST /accounts
-
-POST /products
-
-POST /campaigns
-
-POST /wallets/generate/{campaign_id}
-
-POST /orders
-
-PATCH /orders/{order_id}/status
-
-POST /orders/{order_id}/cancel
-```
-
-Authentication Header:
-
-```http
-Authorization: Bearer <token>
-```
-
----
-
-# Phase 13 - Dockerization
-
-Introduced application containerization.
-
-## Features
-
-✅ Dockerized FastAPI Application
-
-✅ Docker Compose Support
-
-✅ Environment Variable Injection
-
-✅ Existing MongoDB Integration
-
-✅ Consistent Run Environment
-
----
-
-## Workflow
+Implemented using:
 
 ```text
-Docker Container
-        ↓
-FastAPI
-        ↓
-Existing MongoDB
-        ↓
-MongoDB Compass
+Pytest
+FastAPI TestClient
 ```
 
-This allows newly created records to appear in the same MongoDB instance already used during local development.
+## Current Tests
+
+```text
+test_auth.py
+
+  ✓ Register User
+  ✓ Login User
+
+test_clients.py
+
+  ✓ Create Client
+  ✓ Authentication Protection
+
+test_health.py
+
+  ✓ OpenAPI Endpoint
+```
 
 ---
 
-# Current System Capabilities
+## Run Tests
+
+```bash
+python -m pytest
+```
+
+Example:
 
 ```text
-✅ JWT Authentication
-
-✅ Client Management
-
-✅ Account Management
-
-✅ Product Management
-
-✅ Campaign Management
-
-✅ Campaign Product Mapping
-
-✅ Claim Code Upload
-
-✅ Wallet Generation
-
-✅ Wallet Accounting
-
-✅ Order Creation
-
-✅ Order Status Workflow
-
-✅ Wallet Transactions
-
-✅ Refund Processing
-
-✅ Dockerized Deployment
+=====================
+5 passed
+=====================
 ```
 
 ---
@@ -827,7 +738,7 @@ This allows newly created records to appear in the same MongoDB instance already
 # Completed Phases
 
 ```text
-✅ Phase 1  - Foundation
+✅ Phase 1  - Project Foundation
 
 ✅ Phase 2  - Client Module
 
@@ -852,56 +763,80 @@ This allows newly created records to appear in the same MongoDB instance already
 ✅ Phase 12 - JWT Authentication
 
 ✅ Phase 13 - Dockerization
+
+✅ Phase 14 - Pytest Testing Suite
 ```
 
 ---
 
-# Next Phase
-
-## Phase 14 - Pytest Testing Suite
-
-Planned:
+# Key Features
 
 ```text
-Unit Tests
+✅ Client Management
 
-Integration Tests
+✅ Account Management
 
-API Tests
+✅ Product Management
 
-Authentication Tests
+✅ Campaign Management
 
-Order Workflow Tests
+✅ Campaign Product Mapping
 
-Refund Workflow Tests
+✅ Claim Code Upload
+
+✅ Wallet Creation
+
+✅ Wallet Accounting
+
+✅ Order Management
+
+✅ Order Status Tracking
+
+✅ Transaction Auditing
+
+✅ Refund Processing
+
+✅ JWT Authentication
+
+✅ Docker Deployment
+
+✅ Automated Testing
 ```
 
 ---
 
 # Final Outcome
 
-The Campaign CMS now supports a complete enterprise reward lifecycle:
+The Campaign CMS provides a complete reward management lifecycle:
 
 ```text
 Authentication
-      ↓
+     |
+     v
 Campaign Setup
-      ↓
+     |
+     v
 Claim Code Upload
-      ↓
+     |
+     v
 Wallet Generation
-      ↓
+     |
+     v
 Reward Redemption
-      ↓
-Wallet Accounting
-      ↓
-Order Lifecycle
-      ↓
-Transaction Auditing
-      ↓
+     |
+     v
+Wallet Transactions
+     |
+     v
+Order Management
+     |
+     v
 Refund Processing
-      ↓
+     |
+     v
+Audit Tracking
+     |
+     v
 Dockerized Deployment
-```
-
-This project demonstrates backend architecture, authentication, wallet accounting, order management, transaction auditing, refunds, and containerized deployment using FastAPI and MongoDB.
+     |
+     v
