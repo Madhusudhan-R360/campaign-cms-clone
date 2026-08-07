@@ -8,7 +8,6 @@ from db.connection import (
     wallets_collection
 )
 
-
 async def generate_wallets(campaign_id):
 
     campaign = await campaigns_collection.find_one(
@@ -74,7 +73,6 @@ async def generate_wallets(campaign_id):
         "message": f"{len(wallets)} wallets generated"
     }
 
-
 async def get_wallets():
 
     wallets = await (
@@ -91,7 +89,6 @@ async def get_wallets():
         "success": True,
         "data": wallets
     }
-
 
 async def get_wallet(wallet_id):
 
@@ -114,7 +111,6 @@ async def get_wallet(wallet_id):
         "success": True,
         "data": wallet
     }
-
 
 async def get_wallet_by_claim_code(claim_code):
 
