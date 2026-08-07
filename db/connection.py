@@ -44,3 +44,5 @@ order_items_collection = db[
 wallet_transactions_collection = db[
     "wallet_transactions"
 ]
+
+users_collection = db["users"]
