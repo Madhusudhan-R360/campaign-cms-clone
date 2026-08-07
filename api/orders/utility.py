@@ -5,9 +5,9 @@ from bson import ObjectId
 from db.connection import (
     wallets_collection,
     products_collection,
-    orders_collection
+    orders_collection,
+    wallet_transactions_collection
 )
-
 
 async def create_order(data):
 
@@ -59,6 +59,29 @@ async def create_order(data):
     result = await orders_collection.insert_one(
         order
     )
+
+    await wallet_transactions_collection.insert_one(
+    {
+        "claim_code":
+        data["claim_code"],
+
+        "transaction_type":
+        "debit",
+
+        "amount":
+        total_amount,
+
+        "reference":
+        str(result.inserted_id),
+
+        "description":
+        f"Order redemption for "
+        f"{product['name']}",
+
+        "created_at":
+        datetime.utcnow()
+    }
+)
 
     await wallets_collection.update_one(
         {

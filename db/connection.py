@@ -41,3 +41,6 @@ orders_collection = db[
 order_items_collection = db[
     "order_items"
 ]
+wallet_transactions_collection = db[
+    "wallet_transactions"
+]
