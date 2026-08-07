@@ -3,6 +3,10 @@ from fastapi import APIRouter
 from api.orders import utility
 from api.orders.schema import CreateOrderSchema
 
+from fastapi import Depends
+
+from core.security import verify_token
+
 from api.orders.schema import (
     CreateOrderSchema,
     UpdateOrderStatusSchema
@@ -12,12 +16,12 @@ router = APIRouter()
 
 @router.post("/orders")
 async def create_order(
-    data: CreateOrderSchema
+    data: CreateOrderSchema,
+    user=Depends(verify_token)
 ):
     return await utility.create_order(
         data.model_dump()
     )
-
 
 @router.get("/orders")
 async def get_orders():
