@@ -1,8 +1,8 @@
 # Campaign CMS Clone
 
-An intermediate-to-advanced Campaign CMS built using **FastAPI** and **MongoDB**.
+An intermediate-to-advanced Campaign CMS built using **FastAPI**, **MongoDB**, and **JWT Authentication**.
 
-This project recreates the complete reward lifecycle used in enterprise reward and loyalty platforms, from campaign creation to reward redemption, transaction tracking, and refund processing.
+This project recreates a complete enterprise-style reward lifecycle from campaign setup to reward redemption, transaction auditing, refund processing, and secure API access.
 
 ---
 
@@ -18,15 +18,21 @@ Build a Campaign CMS capable of:
 - Uploading Claim Codes
 - Generating Wallets
 - Creating Orders
-- Managing Order Statuses
+- Tracking Order Lifecycle
 - Tracking Wallet Transactions
-- Supporting Order Cancellation & Refunds
+- Supporting Refunds
+- Securing APIs with JWT Authentication
 
 ---
 
 # Complete System Architecture
 
 ```text
+User
+   ↓
+JWT Authentication
+   ↓
+
 Client
    ↓
 Account
@@ -54,12 +60,27 @@ Refund Workflow
 
 # Technology Stack
 
+## Backend
+
 - FastAPI
+- Pydantic
+- Uvicorn
+
+## Database
+
 - MongoDB
 - Motor
-- Pydantic
+
+## Security
+
+- JWT Authentication
+- Passlib
+- bcrypt
+- python-jose
+
+## Data Processing
+
 - Pandas
-- Uvicorn
 
 ---
 
@@ -70,6 +91,11 @@ campaign-cms-clone/
 
 ├── api/
 │
+│   ├── auth/
+│   │   ├── app.py
+│   │   ├── schema.py
+│   │   └── utility.py
+│   │
 │   ├── clients/
 │   ├── accounts/
 │   ├── products/
@@ -79,6 +105,9 @@ campaign-cms-clone/
 │   ├── wallet_transactions/
 │   └── orders/
 │
+├── core/
+│   └── security.py
+│
 ├── db/
 │   ├── config.py
 │   └── connection.py
@@ -87,8 +116,8 @@ campaign-cms-clone/
 │   └── csv/
 │
 ├── main.py
-├── .env
 ├── requirements.txt
+├── .env
 └── README.md
 ```
 
@@ -106,18 +135,31 @@ claim_codes
 wallets
 wallet_transactions
 orders
-order_items
+users
 ```
 
 ---
 
-# Setup
+# Environment Configuration
+
+## .env
+
+```env
+MONGO_URL=mongodb://localhost:27017
+DATABASE_NAME=campaign_cms
+```
+
+---
+
+# Installation
 
 ## Create Virtual Environment
 
 ```bash
 python3 -m venv venv
 ```
+
+---
 
 ## Activate Environment
 
@@ -143,24 +185,28 @@ pip install -r requirements.txt
 
 ---
 
-## Configure Environment
+# Requirements
 
-Create `.env`
-
-```env
-MONGO_URL=mongodb://localhost:27017
-DATABASE_NAME=campaign_cms
+```txt
+fastapi
+uvicorn
+motor
+pymongo
+pandas
+python-jose[cryptography]
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
 ```
 
 ---
 
-## Run Application
+# Run Application
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Swagger UI:
+Swagger:
 
 ```text
 http://localhost:8000/docs
@@ -168,32 +214,26 @@ http://localhost:8000/docs
 
 ---
 
-# Complete Business Flow
+# Business Flow
 
 ```text
-Client
-   ↓
-Account
-   ↓
-Product
-   ↓
-Campaign
-   ↓
-Campaign Product Mapping
-   ↓
-Claim Code Upload
-   ↓
-Wallet Generation
-   ↓
-Order Creation
-   ↓
-Wallet Deduction
-   ↓
-Wallet Transaction
-   ↓
-Order Status Workflow
-   ↓
-Refund Workflow
+Samsung India
+      ↓
+Samsung eStore
+      ↓
+Amazon Gift Card ₹500
+      ↓
+Samsung Welcome Rewards 2026
+      ↓
+SAM1001
+      ↓
+Wallet
+      ↓
+Order
+      ↓
+Transaction
+      ↓
+Refund
 ```
 
 ---
@@ -203,12 +243,14 @@ Refund Workflow
 Completed:
 
 - FastAPI Setup
-- MongoDB Setup
-- Environment Configuration
-- Collection Definitions
+- MongoDB Configuration
+- Environment Variables
+- Collection Setup
 - Health Endpoint
 
-## API
+---
+
+## Health API
 
 ```http
 GET /health
@@ -218,7 +260,7 @@ GET /health
 
 # Phase 2 - Client Module
 
-Represents organizations using the platform.
+Represents organizations.
 
 Examples:
 
@@ -228,6 +270,8 @@ HSBC
 Citibank
 MoneyMax
 ```
+
+---
 
 ## APIs
 
@@ -261,6 +305,8 @@ Samsung India
 Samsung eStore
 ```
 
+---
+
 ## APIs
 
 ```http
@@ -279,7 +325,7 @@ PUT /accounts/{account_id}
 
 # Phase 4 - Product Module
 
-Products represent rewards available for redemption.
+Products represent redeemable rewards.
 
 Examples:
 
@@ -290,6 +336,8 @@ Flipkart Gift Card ₹1000
 
 Myntra Voucher ₹750
 ```
+
+---
 
 ## APIs
 
@@ -309,17 +357,19 @@ PUT /products/{product_id}
 
 # Phase 5 - Campaign Module
 
-Campaigns represent reward programs.
+Represents reward programs.
 
 Examples:
 
 ```text
 Samsung Welcome Rewards 2026
 
-Samsung Festive rewards
-
 Samsung Referral Campaign
+
+Samsung Festive Rewards
 ```
+
+---
 
 ## APIs
 
@@ -335,7 +385,7 @@ PUT /campaigns/{campaign_id}
 
 ---
 
-## Campaign Product Mapping APIs
+## Campaign Product Mapping
 
 ### Link Product
 
@@ -353,17 +403,20 @@ GET /campaigns/{campaign_id}/products
 
 # Phase 6 - Claim Code Module
 
-Claim codes represent reward balances.
+Claim Codes store reward balance allocations.
 
-Example:
+---
 
-```text
-SAM1001 = ₹5000
+## CSV Format
 
-SAM1002 = ₹3000
-
-SAM1003 = ₹10000
+```csv
+claim_code,amount,email
+SAM1001,5000,arjun@gmail.com
+SAM1002,3000,priya@gmail.com
+SAM1003,10000,vikram@gmail.com
 ```
+
+---
 
 ## APIs
 
@@ -379,30 +432,19 @@ GET /claim-codes/campaign/{campaign_id}
 
 ---
 
-## CSV Format
-
-```csv
-claim_code,amount,email
-SAM1001,5000,arjun@gmail.com
-SAM1002,3000,priya@gmail.com
-SAM1003,10000,vikram@gmail.com
-```
-
----
-
 ## Validations
 
-- Campaign validation
-- CSV structure validation
-- Duplicate claim code validation
-- Existing claim code validation
-- Positive amount validation
+- Campaign Validation
+- CSV Header Validation
+- Duplicate Claim Code Validation
+- Existing Claim Code Validation
+- Positive Amount Validation
 
 ---
 
 # Phase 7 - Wallet Module
 
-Wallets store redeemable balances.
+Wallets store spendable reward balance.
 
 Relationship:
 
@@ -441,26 +483,9 @@ GET /wallets/claim-code/{claim_code}
 
 ---
 
-## Features
-
-- Automatic wallet generation
-- Claim code validation
-- Duplicate wallet prevention
-- Balance initialization
-
----
-
 # Phase 8 - Order Module
 
 Orders represent reward redemptions.
-
-Relationship:
-
-```text
-Wallet
-      ↓
-Order
-```
 
 ---
 
@@ -480,10 +505,10 @@ GET /orders/claim-code/{claim_code}
 
 ## Features
 
-- Wallet validation
-- Product validation
-- Balance validation
-- Wallet deduction
+- Product Validation
+- Wallet Validation
+- Balance Validation
+- Wallet Deduction
 
 ---
 
@@ -531,31 +556,17 @@ failed
 
 ## APIs
 
-### Update Status
-
 ```http
 PATCH /orders/{order_id}/status
-```
 
-### Get Orders By Status
-
-```http
 GET /orders/status/{status}
 ```
 
 ---
 
-## Features
-
-- Status transition validation
-- Terminal state protection
-- Workflow tracking
-
----
-
 # Phase 10 - Wallet Transaction History
 
-Introduced full wallet audit trail.
+Introduced transaction auditing.
 
 Relationship:
 
@@ -576,15 +587,14 @@ credit
 
 ---
 
-## Example Debit Transaction
+## Debit Example
 
 ```json
 {
   "claim_code": "SAM1001",
   "transaction_type": "debit",
   "amount": 1000,
-  "reference": "ORDER_123",
-  "description": "Order redemption"
+  "reference": "ORDER_123"
 }
 ```
 
@@ -592,21 +602,11 @@ credit
 
 ## APIs
 
-### Get All Transactions
-
 ```http
 GET /wallet-transactions
-```
 
-### Get Transaction By Id
-
-```http
 GET /wallet-transactions/{transaction_id}
-```
 
-### Get Transactions By Claim Code
-
-```http
 GET /wallet-transactions/claim-code/{claim_code}
 ```
 
@@ -614,37 +614,45 @@ GET /wallet-transactions/claim-code/{claim_code}
 
 ## Features
 
-- Automatic debit transaction creation
-- Wallet audit tracking
-- Transaction lookup
-- Claim code transaction history
+- Automatic Debit Transaction Creation
+- Wallet Audit Trail
+- Transaction History
+- Claim Code Lookup
 
 ---
 
 # Phase 11 - Order Cancellation & Wallet Refund
 
-Introduced refund and balance restoration workflow.
+Introduced wallet refund workflow.
 
 Relationship:
 
 ```text
 Order
    ↓
-Cancellation
+Cancel
    ↓
-Wallet Refund
+Refund
    ↓
 Credit Transaction
 ```
 
 ---
 
-# Cancellation Workflow
+## API
+
+```http
+POST /orders/{order_id}/cancel
+```
+
+---
+
+## Workflow
 
 ```text
-Create Order
+Order Creation
       ↓
-Wallet Debit
+Wallet Deduction
       ↓
 Debit Transaction
 
@@ -654,137 +662,185 @@ Wallet Refund
       ↓
 Credit Transaction
       ↓
-Order Status = Cancelled
-```
-
----
-
-## Business Rules
-
-### Allowed
-
-```text
-pending → cancelled
-
-processing → cancelled
-```
-
-### Not Allowed
-
-```text
-completed → cancelled
-
-failed → cancelled
-
-cancelled → cancelled
-```
-
----
-
-## API
-
-### Cancel Order
-
-```http
-POST /orders/{order_id}/cancel
-```
-
----
-
-## Refund Flow Example
-
-### Initial Wallet
-
-```json
-{
-  "available_balance": 5000,
-  "consumed_balance": 0
-}
-```
-
-### Create Order
-
-```text
-Order Amount = 1000
-```
-
-Wallet becomes:
-
-```json
-{
-  "available_balance": 4000,
-  "consumed_balance": 1000
-}
-```
-
-### Cancel Order
-
-```http
-POST /orders/{order_id}/cancel
-```
-
-Wallet becomes:
-
-```json
-{
-  "available_balance": 5000,
-  "consumed_balance": 0
-}
-```
-
----
-
-## Credit Transaction
-
-Created automatically:
-
-```json
-{
-  "claim_code": "SAM1001",
-  "transaction_type": "credit",
-  "amount": 1000,
-  "reference": "ORDER_ID",
-  "description": "Refund for order"
-}
+Status Updated
 ```
 
 ---
 
 ## Features
 
-- Order cancellation
-- Wallet refund
-- Automatic credit transaction logging
-- Refund audit trail
-- Status update to cancelled
-- Double refund prevention
+- Wallet Refund
+- Credit Transaction Creation
+- Refund Auditing
+- Double Refund Prevention
 
 ---
 
-# Complete Example Scenario
+# Phase 12 - JWT Authentication
+
+Introduced secure API access using JWT.
+
+Relationship:
 
 ```text
-Samsung India
-      ↓
-Samsung eStore
-      ↓
-Amazon Gift Card ₹500
-      ↓
-Samsung Welcome Rewards 2026
-      ↓
-SAM1001
-      ↓
-Wallet ₹5000
-      ↓
-Order ₹1000
-      ↓
-Wallet ₹4000
-      ↓
-Cancel Order
-      ↓
-Wallet ₹5000
-      ↓
-Credit Transaction ₹1000
+User
+   ↓
+Register
+   ↓
+Login
+   ↓
+JWT Token
+   ↓
+Protected APIs
+```
+
+---
+
+# User Collection
+
+```json
+{
+  "username": "admin",
+  "password": "$2b$12$hashed_password"
+}
+```
+
+---
+
+# Authentication APIs
+
+## Register
+
+```http
+POST /auth/register
+```
+
+Request:
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+---
+
+## Login
+
+```http
+POST /auth/login
+```
+
+Request:
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "access_token": "jwt_token",
+  "token_type": "bearer"
+}
+```
+
+---
+
+# JWT Security
+
+Passwords are:
+
+```text
+Hashed using bcrypt
+```
+
+Tokens are:
+
+```text
+Signed using HS256
+```
+
+Authentication is implemented using:
+
+```python
+python-jose
+
+passlib
+
+bcrypt
+```
+
+---
+
+# Protected Endpoints
+
+Examples:
+
+```http
+POST /clients
+
+POST /accounts
+
+POST /products
+
+POST /campaigns
+
+POST /claim-codes/upload/{campaign_id}
+
+POST /wallets/generate/{campaign_id}
+
+POST /orders
+
+PATCH /orders/{order_id}/status
+
+POST /orders/{order_id}/cancel
+```
+
+All require:
+
+```http
+Authorization: Bearer <jwt_token>
+```
+
+---
+
+# Complete Capabilities
+
+```text
+✅ Authentication
+
+✅ Client Management
+
+✅ Account Management
+
+✅ Product Management
+
+✅ Campaign Management
+
+✅ Campaign Product Mapping
+
+✅ Claim Code Upload
+
+✅ Wallet Generation
+
+✅ Wallet Accounting
+
+✅ Order Creation
+
+✅ Order Status Workflow
+
+✅ Wallet Transactions
+
+✅ Refund Processing
+
+✅ JWT Security
 ```
 
 ---
@@ -812,70 +868,50 @@ Credit Transaction ₹1000
 
 ✅ Phase 10 - Wallet Transaction History
 
-✅ Phase 11 - Order Cancellation & Wallet Refund
+✅ Phase 11 - Order Cancellation & Refund
+
+✅ Phase 12 - JWT Authentication
 ```
 
 ---
 
-# Current System Capabilities
+# Upcoming Enhancements
+
+## Phase 13
+
+Dockerization
 
 ```text
-Client Management
+Dockerfile
 
-Account Management
+docker-compose.yml
 
-Product Management
+Mongo Container
 
-Campaign Management
-
-Campaign Product Mapping
-
-Claim Code Upload
-
-Wallet Generation
-
-Order Creation
-
-Wallet Deduction
-
-Order Status Lifecycle
-
-Wallet Transaction Tracking
-
-Order Cancellation
-
-Wallet Refund Processing
-
-Transaction Audit Trail
+Application Container
 ```
 
----
+## Phase 14
 
-# Recommended Future Enhancements
+Pytest
 
 ```text
-Campaign Analytics Dashboard
+Unit Tests
 
-Inventory Management
+Integration Tests
 
-RBAC (Role Based Access Control)
-
-Approval Workflow
-
-Campaign Clone
-
-Claim Code Expiry
-
-Scheduled Campaign Activation
+API Tests
 ```
 
 ---
 
 # Final Outcome
 
-The Campaign CMS now supports a complete reward management lifecycle with:
+The Campaign CMS now supports a complete enterprise-style reward lifecycle:
 
 ```text
+Authentication
+      ↓
 Campaign Setup
       ↓
 Claim Code Upload
@@ -886,11 +922,13 @@ Reward Redemption
       ↓
 Wallet Accounting
       ↓
-Order Workflow
-      ↓
 Transaction Tracking
       ↓
+Order Lifecycle
+      ↓
 Refund Processing
+      ↓
+Secure Access Control
 ```
 
-This closely resembles a real-world enterprise rewards and campaign management platform built using FastAPI and MongoDB.
+This project demonstrates backend architecture, authentication, financial workflows, transaction tracking, and reward management using FastAPI and MongoDB.
