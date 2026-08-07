@@ -68,3 +68,13 @@ async def get_orders_by_status(
             status
         )
     )
+
+@router.post(
+    "/orders/{order_id}/cancel"
+)
+async def cancel_order(
+    order_id: str
+):
+    return await utility.cancel_order(
+        order_id
+    )

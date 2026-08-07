@@ -235,7 +235,6 @@ async def update_order_status(
         "message": f"Order moved to {status}"
     }
 
-
 async def get_orders_by_status(
     status
 ):
@@ -259,4 +258,79 @@ async def get_orders_by_status(
     return {
         "success": True,
         "data": orders
+    }
+
+async def cancel_order(order_id):
+
+    order = await orders_collection.find_one(
+        {
+            "_id": ObjectId(order_id)
+        }
+    )
+
+    if not order:
+        return {
+            "success": False,
+            "message": "Order not found"
+        }
+
+    if order["status"] not in [
+        "pending",
+        "processing"
+    ]:
+        return {
+            "success": False,
+            "message": "Only pending or processing orders can be cancelled"
+        }
+
+    wallet = await wallets_collection.find_one(
+        {
+            "claim_code": order["claim_code"]
+        }
+    )
+
+    if not wallet:
+        return {
+            "success": False,
+            "message": "Wallet not found"
+        }
+
+    await wallets_collection.update_one(
+        {
+            "_id": wallet["_id"]
+        },
+        {
+            "$inc": {
+                "available_balance": order["amount"],
+                "consumed_balance": -order["amount"]
+            }
+        }
+    )
+
+    await orders_collection.update_one(
+        {
+            "_id": ObjectId(order_id)
+        },
+        {
+            "$set": {
+                "status": "cancelled",
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+
+    await wallet_transactions_collection.insert_one(
+        {
+            "claim_code": order["claim_code"],
+            "transaction_type": "credit",
+            "amount": order["amount"],
+            "reference": order_id,
+            "description": f"Refund for order {order_id}",
+            "created_at": datetime.utcnow()
+        }
+    )
+
+    return {
+        "success": True,
+        "message": "Order cancelled and wallet refunded"
     }
