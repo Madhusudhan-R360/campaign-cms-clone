@@ -6,6 +6,8 @@ RUN apt-get update && \
     apt-get install -y ca-certificates && \
     update-ca-certificates
 
+RUN mkdir -p uploads/csv
+
 COPY requirements.txt .
 
 RUN pip install \
