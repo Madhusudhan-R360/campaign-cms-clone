@@ -3,11 +3,13 @@ from fastapi import (
     UploadFile,
     File
 )
+import os
 
 from api.claim_codes import utility
 
 router = APIRouter()
 
+os.makedirs("uploads/csv", exist_ok=True)
 
 @router.post("/claim-codes/upload/{campaign_id}")
 async def upload_claim_codes(
