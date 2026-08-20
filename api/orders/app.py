@@ -12,16 +12,14 @@ from api.orders.schema import (
     UpdateOrderStatusSchema
 )
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 @router.post("/orders")
 async def create_order(
-    data: CreateOrderSchema,
-    user=Depends(verify_token)
+    data: CreateOrderSchema
 ):
-    return await utility.create_order(
-        data.model_dump()
-    )
 
 @router.get("/orders")
 async def get_orders():

@@ -1,13 +1,16 @@
 from fastapi import (
     APIRouter,
     UploadFile,
+    Depends,
     File
 )
 import os
-
+from core.security import verify_token
 from api.claim_codes import utility
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 os.makedirs("uploads/csv", exist_ok=True)
 

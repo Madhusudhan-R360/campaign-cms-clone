@@ -1,8 +1,10 @@
-from fastapi import APIRouter
-
+from fastapi import APIRouter, Depends
+from core.security import verify_token
 from api.wallets import utility
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 @router.post("/wallets/generate/{campaign_id}")
 async def generate_wallets(

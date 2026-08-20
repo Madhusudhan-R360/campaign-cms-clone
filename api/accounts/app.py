@@ -1,5 +1,5 @@
-from fastapi import APIRouter
-
+from fastapi import APIRouter, Depends
+from core.security import verify_token
 from api.accounts.schema import (
     CreateAccountSchema,
     UpdateAccountSchema
@@ -7,7 +7,9 @@ from api.accounts.schema import (
 
 from api.accounts import utility
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 @router.post("/accounts")
 async def create_account(

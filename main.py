@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 
-from api.clients.app import router as client_router
-
 from api.clients.app import (
     router as client_router
 )
@@ -45,11 +43,6 @@ app = FastAPI(
 app.include_router(
     product_router,
     tags=["Products"]
-)
-
-app.include_router(
-    client_router,
-    tags=["Clients"]
 )
 
 app.include_router(

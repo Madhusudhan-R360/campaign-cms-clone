@@ -9,8 +9,9 @@ from api.clients.schema import (
 
 from api.clients import utility
 
-router = APIRouter()
-
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 @router.post("/clients")
 async def create_client(

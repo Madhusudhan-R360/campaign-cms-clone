@@ -1,8 +1,10 @@
-from fastapi import APIRouter
-
+from fastapi import APIRouter, Depends
+from core.security import verify_token
 from api.wallet_transactions import utility
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 @router.get(
     "/wallet-transactions"

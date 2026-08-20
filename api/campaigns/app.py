@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from api.campaigns import utility
 
@@ -7,8 +7,10 @@ from api.campaigns.schema import (
     UpdateCampaignSchema,
     CampaignProductSchema
 )
-
-router = APIRouter()
+from core.security import verify_token
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 @router.post("/campaigns")
 async def create_campaign(

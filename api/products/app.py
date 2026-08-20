@@ -1,13 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from api.products.schema import (
     CreateProductSchema,
     UpdateProductSchema
 )
-
+from core.security import verify_token
 from api.products import utility
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 @router.post("/products")
 async def create_product(
