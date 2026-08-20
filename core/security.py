@@ -2,9 +2,9 @@ from datetime import datetime
 from datetime import timedelta
 
 from jose import jwt
+from db.config import settings
 
-
-SECRET_KEY = "campaign_cms_secret_key"
+SECRET_KEY = settings.secret_key
 
 ALGORITHM = "HS256"
 
